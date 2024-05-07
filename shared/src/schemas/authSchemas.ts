@@ -13,3 +13,9 @@ export const signUpBody = z
     signUpDemandTokenValue: z.number(),
   })
   .strict();
+
+export const signInBody = z 
+  .object({
+    username: z.string().min(1),
+    password: z.string().min(1)
+  })
