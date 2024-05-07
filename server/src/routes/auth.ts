@@ -49,4 +49,6 @@ router.post("/signin",
 //*
 router.get("/me", protect, authController.getMe);
 
+router.get("/loggout", protect, authController.loggOut);
+
 export default router;
