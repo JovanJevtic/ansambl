@@ -19,6 +19,8 @@ export const generateAuthToken = (id: number) => {
 
 export const deleteExpiredSignUpDemandTokens = async () => {
   try {
+    console.log("cron started!!!")
+
     const deletedTokens = await prisma.signUpDemandToken.deleteMany({
       where: {
         expiredAt: {

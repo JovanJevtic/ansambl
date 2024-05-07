@@ -1,9 +1,12 @@
 import cron from 'node-cron'
-import { deleteExpiredSignUpDemandTokens } from 'src/controllers/auth';
+import { deleteExpiredSignUpDemandTokens } from '../controllers/auth';
 
 const deleteExpiredSignUpDemandTokensCronJob = () => {
-    cron.schedule("0 0 * * *", () => {
+    cron.schedule("* */12 * * *", () => {
         deleteExpiredSignUpDemandTokens();
+    }, {
+        timezone: "Europe/Sarajevo",
+        scheduled: true
     });
 }
 

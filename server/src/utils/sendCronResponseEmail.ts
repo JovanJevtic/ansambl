@@ -36,10 +36,6 @@ const sendCronResponseEmail = async (error: any) => {
       };
     
     const sendResult = await transporter.sendMail(mailOptions);
-      if (sendResult.rejected) {
-        console.log("An error ocurred while doing the cron job!");
-        return
-      }
 }
 
 export default sendCronResponseEmail
