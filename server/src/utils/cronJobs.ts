@@ -1,13 +1,17 @@
-import cron from 'node-cron'
-import { deleteExpiredSignUpDemandTokens } from '../controllers/auth';
+import cron from "node-cron";
+import { deleteExpiredSignUpDemandTokens } from "../controllers/auth";
 
 const deleteExpiredSignUpDemandTokensCronJob = () => {
-    cron.schedule("* */12 * * *", () => {
-        deleteExpiredSignUpDemandTokens();
-    }, {
-        timezone: "Europe/Sarajevo",
-        scheduled: true
-    });
-}
+  cron.schedule(
+    "* */12 * * *",
+    () => {
+      deleteExpiredSignUpDemandTokens();
+    },
+    {
+      timezone: "Europe/Sarajevo",
+      scheduled: true,
+    }
+  );
+};
 
-export default deleteExpiredSignUpDemandTokensCronJob
+export default deleteExpiredSignUpDemandTokensCronJob;
