@@ -9,47 +9,51 @@ import { TypedRequestBody } from "zod-express-middleware";
 import prisma from "../../../shared/src/db";
 import * as authSchemas from "../../../shared/src/schemas/authSchemas";
 import capitalizeFirstLetter from "../utils/capitalize";
+import env from "../utils/env";
 import sendCronResponseEmail from "../utils/sendCronResponseEmail";
 
 export const generateAuthToken = (id: number) => {
-  return jsonwebtoken.sign({ id }, process.env.JWT_SECRET, {
+  return jsonwebtoken.sign({ id }, env.JWT_SECRET, {
     expiresIn: "5m",
   });
 };
 
 export const deleteExpiredSignUpDemandTokens = async () => {
   try {
-    console.log("cron started!!!")
+    console.log("cron started!!!");
 
     const deletedTokens = await prisma.signUpDemandToken.deleteMany({
       where: {
         expiredAt: {
-          lte: new Date()
-        }
-      }
+          lte: new Date(),
+        },
+      },
     });
 
-    sendCronResponseEmail(`Sucessfully deleted: ${deletedTokens.count} instances!`);
-    return    
+    sendCronResponseEmail(
+      `Sucessfully deleted: ${deletedTokens.count} instances!`
+    );
+    return;
   } catch (error) {
-    sendCronResponseEmail(error)
+    sendCronResponseEmail(error);
   }
-}
+};
 
 export const getMe = expressAsyncHandler((req: Request, res: Response) => {
   if (!req.user) {
-    res.status(StatusCodes.UNAUTHORIZED)
+    res.status(StatusCodes.UNAUTHORIZED);
     throw new Error(getReasonPhrase(StatusCodes.UNAUTHORIZED));
   }
 
   res.status(200).json(req.user);
 });
 
-export const signIn = expressAsyncHandler( 
-  async(
-    req: TypedRequestBody<typeof authSchemas.signUpBody>, 
+export const signIn = expressAsyncHandler(
+  async (
+    req: TypedRequestBody<typeof authSchemas.signUpBody>,
     res: Response
-  ) => {});
+  ) => {}
+);
 
 export const signUpDemand = expressAsyncHandler(
   async (
@@ -76,9 +80,9 @@ export const signUpDemand = expressAsyncHandler(
 
     const usernameEquipped = await prisma.user.findUnique({
       where: {
-        username
-      }
-    })
+        username,
+      },
+    });
 
     if (usernameEquipped) {
       res.status(StatusCodes.BAD_REQUEST);
@@ -103,8 +107,8 @@ export const signUpDemand = expressAsyncHandler(
       const transporter = nodemailer.createTransport({
         service: "gmail",
         auth: {
-          user: process.env.NODEMAILER_AUTH_EMAIL,
-          pass: process.env.NODEMAILER_AUTH_PWD,
+          user: env.NODEMAILER_AUTH_EMAIL,
+          pass: env.NODEMAILER_AUTH_PWD,
         },
       });
 
@@ -125,13 +129,13 @@ export const signUpDemand = expressAsyncHandler(
             <p>Your verification code is: <b> ${token} </b>.</p>
           </body>
         </html>     
-      `
+      `;
 
       const mailOptions = {
-        from: process.env.NODEMAILER_AUTH_EMAIL,
+        from: env.NODEMAILER_AUTH_EMAIL,
         to: email,
         subject: "Confirm your account - Ansambl!",
-        html: html
+        html: html,
       };
 
       const sendResult = transporter.sendMail(mailOptions);
@@ -162,8 +166,8 @@ export const signUp = expressAsyncHandler(
     });
 
     if (!signUpDemandTokenId || !signUpDemandTokenValue || !signUpDemandToken) {
-      res.status(StatusCodes.BAD_REQUEST)
-      throw new Error(getReasonPhrase(StatusCodes.BAD_REQUEST))
+      res.status(StatusCodes.BAD_REQUEST);
+      throw new Error(getReasonPhrase(StatusCodes.BAD_REQUEST));
     }
 
     if (signUpDemandToken.expiredAt < new Date()) {
@@ -203,7 +207,11 @@ export const signUp = expressAsyncHandler(
           res.json(user).status(200);
         } catch (error) {
           res.json(STATUS_CODES.INTERNAL_SERVER_ERROR);
-          throw new Error(getReasonPhrase(STATUS_CODES.INTERNAL_SERVER_ERROR));
+          throw new Error(
+            getReasonPhrase(
+              STATUS_CODES.INTERNAL_SERVER_ERROR || "Unauthorized!"
+            )
+          );
         }
       } else {
         const updatedUser = await prisma.user.update({
@@ -226,18 +234,20 @@ export const signUp = expressAsyncHandler(
         // throw new Error("User with this email already exists");
       }
     } else {
-      res.status(StatusCodes.UNAUTHORIZED)
-      throw new Error(getReasonPhrase(STATUS_CODES.UNAUTHORIZED))
+      res.status(StatusCodes.UNAUTHORIZED);
+      throw new Error(
+        getReasonPhrase(STATUS_CODES.UNAUTHORIZED || "Unauthorized!")
+      );
     }
   }
 );
 
 export const loggOut = expressAsyncHandler((req, res) => {
   try {
-    req.user = null
-    res.status(200).json("Logged out!")
+    req.user = undefined;
+    res.status(200).json("Logged out!");
   } catch (error) {
-    res.status(StatusCodes.INTERNAL_SERVER_ERROR)
-    throw new Error(getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR))    
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR);
+    throw new Error(getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR));
   }
 });

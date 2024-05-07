@@ -1,4 +1,5 @@
 import { ErrorRequestHandler, Request, Response } from "express";
+import env from "../utils/env";
 
 const errorHandler: ErrorRequestHandler = (
   err: Error,
@@ -10,7 +11,7 @@ const errorHandler: ErrorRequestHandler = (
 
   res.status(statusCode).json({
     message: err.message,
-    stack: (process.env.NODE_ENV || "").trim() === "dev" ? err.stack : null,
+    stack: (env.NODE_ENV || "").trim() === "dev" ? err.stack : null,
   });
 };
 

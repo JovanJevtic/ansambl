@@ -1,7 +1,7 @@
+import "dotenv/config";
 import express from "express";
 import helmet from "helmet";
-
-require("dotenv").config();
+import env from "./utils/env";
 
 import errorHandler from "./middlewares/errorHandler";
 
@@ -17,9 +17,9 @@ app.use("/api/v1", v1);
 
 app.use(errorHandler);
 
-deleteExpiredSignUpDemandTokensCronJob()
+deleteExpiredSignUpDemandTokensCronJob();
 
-const PORT = 3000 || process.env.PORT;
+const PORT = 3000 || env.PORT;
 
 app.listen(PORT, () => {
   return console.log(

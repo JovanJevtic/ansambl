@@ -8,8 +8,6 @@ import protect from "../middlewares/authHandler";
 
 const router = express.Router();
 
-// router.post('/signup', validateData(authSchemas.signupSchema), authController.signUp);
-
 /**
  * /api/v1/auth/signup-demand
  * Provide user data required for signup and get the signUpDemandToken and then use it to complete signUp

@@ -1,8 +1,10 @@
 import { NextFunction, Request, Response } from "express";
 import expressAsyncHandler from "express-async-handler";
-import jsonwebtoken, { JwtPayload } from "jsonwebtoken";
-import prisma from "../../../shared/src/db";
 import { StatusCodes, getReasonPhrase } from "http-status-codes";
+import jsonwebtoken, { JwtPayload } from "jsonwebtoken";
+import { UserWithoutPassword } from "src/types/express";
+import prisma from "../../../shared/src/db";
+import env from "../utils/env";
 
 const protect = expressAsyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -17,7 +19,7 @@ const protect = expressAsyncHandler(
 
         const decoded = jsonwebtoken.verify(
           token,
-          process.env.JWT_SECRET
+          env.JWT_SECRET
         ) as JwtPayload;
 
         const user = await prisma.user.findUnique({
@@ -39,7 +41,13 @@ const protect = expressAsyncHandler(
             username: true,
           },
         });
-        req.user = user;
+
+        if (!req.user) {
+          res.status(StatusCodes.UNAUTHORIZED);
+          throw new Error(getReasonPhrase(StatusCodes.UNAUTHORIZED));
+        }
+
+        req.user = user as UserWithoutPassword;
 
         next();
       } catch (error) {
