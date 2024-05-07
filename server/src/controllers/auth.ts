@@ -47,9 +47,50 @@ export const getMe = expressAsyncHandler((req: Request, res: Response) => {
 
 export const signIn = expressAsyncHandler( 
   async(
-    req: TypedRequestBody<typeof authSchemas.signUpBody>, 
+    req: TypedRequestBody<typeof authSchemas.signInBody>, 
     res: Response
-  ) => {});
+  ) => {
+    try {
+      const {
+        username, password
+      } = req.body
+
+      if (!username || !password) {
+        res.status(StatusCodes.BAD_REQUEST);
+        throw new Error(getReasonPhrase(StatusCodes.BAD_REQUEST));
+      }
+
+      const user = await prisma.user.findFirst({
+        where: {
+          OR: [
+            { email: username },
+            { username: username }
+          ]
+        },
+      })
+
+      if (user && user.password && (await bcrypt.compare(password, user.password))) {
+        const token = generateAuthToken(user.id);
+        const { password, ...userWithoutPassword } = user
+        req.user = userWithoutPassword
+        res.status(StatusCodes.OK).json({ token })
+      } else {
+        const isPhoneNumber = /^[0-9]+$/;
+        
+        if (isPhoneNumber.test(username)) {
+          res.status(StatusCodes.BAD_REQUEST); 
+          throw new Error("Format telefonskog broja je +387XxXxxXxx");  
+        } 
+
+        res.status(StatusCodes.BAD_REQUEST); 
+        throw new Error(getReasonPhrase(StatusCodes.BAD_REQUEST));
+      }
+    } catch (error) {
+      console.log(error, '<<<<<<<<')
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR);
+      throw new Error(getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR))
+    }
+  });
 
 export const signUpDemand = expressAsyncHandler(
   async (

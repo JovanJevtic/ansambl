@@ -37,7 +37,12 @@ router.post(
 //? Signin
 //! @api/v1/auth/signin
 //* {  }
-router.get("/", authController.signIn);
+router.post("/signin", 
+  validateRequest({
+    body: authSchemas.signInBody
+  }),
+  authController.signIn
+);
 
 //? Get the user
 //! @api/v1/auth/me
