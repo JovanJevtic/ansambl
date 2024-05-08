@@ -42,6 +42,13 @@ router.post("/signin",
   authController.signIn
 );
 
+router.post("/refresh-token",
+  validateRequest({
+    body: authSchemas.refreshAccessTokenBody
+  }),
+  authController.refreshAccessToken
+)
+
 //? Get the user
 //! @api/v1/auth/me
 //*
