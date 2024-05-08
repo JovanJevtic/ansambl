@@ -1,0 +1,63 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output = "./"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum UserType {
+  PERSONAL
+  ORGANIZATION
+}
+
+enum Gender {
+  MALE
+  FEMALE
+}
+
+enum Category {
+  MUSIC
+  CULTURE
+}
+
+model User {
+  id Int @id @default(autoincrement())
+  name String? @db.VarChar(50)
+  username String @db.VarChar(30) @unique
+  type UserType
+  birthday DateTime? @db.Date
+  gender Gender?
+  adress  String[]
+  interests Category[]
+  isPremium Boolean @default(false)
+  email String @unique @db.Text
+  phone String? @db.Text @unique
+  password String? @db.VarChar(100)
+  googleId String? @db.Text @unique
+  role Role @default(USER)
+}
+
+model SignUpDemandToken {
+  id Int @id @default(autoincrement())
+  email String @db.VarChar(240)
+  type UserType
+  username String @db.VarChar(30)
+  password  String @db.VarChar(100)
+  token Int 
+  expiredAt DateTime @default(dbgenerated("NOW() + INTERVAL '1 HOUR'"))
+} 

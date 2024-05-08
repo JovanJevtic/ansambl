@@ -20,8 +20,6 @@ export const generateAuthToken = (id: number) => {
 
 export const deleteExpiredSignUpDemandTokens = async () => {
   try {
-    console.log("cron started!!!");
-
     const deletedTokens = await prisma.signUpDemandToken.deleteMany({
       where: {
         expiredAt: {
@@ -48,15 +46,13 @@ export const getMe = expressAsyncHandler((req: Request, res: Response) => {
   res.status(200).json(req.user);
 });
 
-export const signIn = expressAsyncHandler( 
-  async(
-    req: TypedRequestBody<typeof authSchemas.signInBody>, 
+export const signIn = expressAsyncHandler(
+  async (
+    req: TypedRequestBody<typeof authSchemas.signInBody>,
     res: Response
   ) => {
     try {
-      const {
-        username, password
-      } = req.body
+      const { username, password } = req.body;
 
       if (!username || !password) {
         res.status(StatusCodes.BAD_REQUEST);
@@ -65,35 +61,37 @@ export const signIn = expressAsyncHandler(
 
       const user = await prisma.user.findFirst({
         where: {
-          OR: [
-            { email: username },
-            { username: username }
-          ]
+          OR: [{ email: username }, { username: username }],
         },
-      })
+      });
 
-      if (user && user.password && (await bcrypt.compare(password, user.password))) {
+      if (
+        user &&
+        user.password &&
+        (await bcrypt.compare(password, user.password))
+      ) {
         const token = generateAuthToken(user.id);
-        const { password, ...userWithoutPassword } = user
-        req.user = userWithoutPassword
-        res.status(StatusCodes.OK).json({ token })
+        const { password, ...userWithoutPassword } = user;
+        req.user = userWithoutPassword;
+        res.status(StatusCodes.OK).json({ token });
       } else {
         const isPhoneNumber = /^[0-9]+$/;
-        
-        if (isPhoneNumber.test(username)) {
-          res.status(StatusCodes.BAD_REQUEST); 
-          throw new Error("Format telefonskog broja je +387XxXxxXxx");  
-        } 
 
-        res.status(StatusCodes.BAD_REQUEST); 
+        if (isPhoneNumber.test(username)) {
+          res.status(StatusCodes.BAD_REQUEST);
+          throw new Error("Format telefonskog broja je +387XxXxxXxx");
+        }
+
+        res.status(StatusCodes.BAD_REQUEST);
         throw new Error(getReasonPhrase(StatusCodes.BAD_REQUEST));
       }
     } catch (error) {
-      console.log(error, '<<<<<<<<')
+      console.log(error, "<<<<<<<<");
       res.status(StatusCodes.INTERNAL_SERVER_ERROR);
-      throw new Error(getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR))
+      throw new Error(getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR));
     }
-  });
+  }
+);
 
 export const signUpDemand = expressAsyncHandler(
   async (
