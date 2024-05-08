@@ -7,15 +7,16 @@ export const signUpDemandBody = z.object({
   email: z.string().email("Not a valid email!").min(1),
 });
 
-export const signUpBody = z
-  .object({
+export const signUpBody = z.object({
     signUpDemandTokenId: z.number(),
     signUpDemandTokenValue: z.number(),
-  })
-  .strict();
+}).strict();
 
-export const signInBody = z 
-  .object({
-    username: z.string().min(1),
-    password: z.string().min(1)
-  })
+export const signInBody = z.object({
+  username: z.string().min(1),
+  password: z.string().min(1)
+}).strict()
+
+export const refreshAccessTokenBody = z.object({
+  token: z.string().trim().min(1)
+})
