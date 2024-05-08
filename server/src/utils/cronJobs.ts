@@ -3,7 +3,7 @@ import { deleteExpiredSignUpDemandTokens } from "../controllers/auth";
 
 const deleteExpiredSignUpDemandTokensCronJob = () => {
   cron.schedule(
-    "* */12 * * *",
+    "0 */12 * * *",
     () => {
       deleteExpiredSignUpDemandTokens();
     },
