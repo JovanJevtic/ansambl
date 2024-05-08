@@ -2,5 +2,4 @@ node_modules
 .env
 package-lock.json
 Makefile
-prisma/*
-!/prisma/schema.prisma
+prisma

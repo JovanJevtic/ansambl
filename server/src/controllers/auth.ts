@@ -14,7 +14,7 @@ import sendCronResponseEmail from "../utils/sendCronResponseEmail";
 
 export const generateAuthToken = (id: number) => {
   return jsonwebtoken.sign({ id }, env.JWT_SECRET, {
-    expiresIn: "5m",
+    // expiresIn: "5m",
   });
 };
 
@@ -45,25 +45,24 @@ export const deleteExpiredSignUpDemandTokens = async () => {
 
 export const refreshAccessToken = expressAsyncHandler(
   async (
-    req: TypedRequestBody<typeof authSchemas.refreshAccessTokenBody>, 
+    req: TypedRequestBody<typeof authSchemas.refreshAccessTokenBody>,
     res: Response
   ) => {
-    const {
-      token
-    } = req.body;
+    const { token } = req.body;
 
     if (!token) {
       res.status(StatusCodes.BAD_REQUEST);
-      throw new Error(getReasonPhrase(StatusCodes.BAD_REQUEST))
+      throw new Error(getReasonPhrase(StatusCodes.BAD_REQUEST));
     }
 
     try {
       // todo....
     } catch (error) {
       res.status(StatusCodes.INTERNAL_SERVER_ERROR);
-      throw new Error(getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR))
+      throw new Error(getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR));
     }
-})
+  }
+);
 
 export const getMe = expressAsyncHandler((req: Request, res: Response) => {
   if (!req.user) {
@@ -99,11 +98,11 @@ export const signIn = expressAsyncHandler(
         (await bcrypt.compare(password, user.password))
       ) {
         const token = generateAuthToken(user.id);
-        const refreshToken = generateRefreshToken(user.id)
+        const refreshToken = generateRefreshToken(user.id);
 
-        const { password, ...userWithoutPassword } = user
-        req.user = userWithoutPassword
-        res.status(StatusCodes.OK).json({ token, refreshToken })
+        const { password, ...userWithoutPassword } = user;
+        req.user = userWithoutPassword;
+        res.status(StatusCodes.OK).json({ token, refreshToken });
       } else {
         const isPhoneNumber = /^[0-9]+$/;
 
@@ -219,7 +218,7 @@ export const signUpDemand = expressAsyncHandler(
   }
 );
 
-export const signUp = expressAsyncHandler( 
+export const signUp = expressAsyncHandler(
   async (
     req: TypedRequestBody<typeof authSchemas.signUpBody>,
     res: Response
@@ -231,7 +230,7 @@ export const signUp = expressAsyncHandler(
         id: signUpDemandTokenId,
       },
     });
-    
+
     if (!signUpDemandTokenId || !signUpDemandTokenValue || !signUpDemandToken) {
       res.status(StatusCodes.BAD_REQUEST);
       throw new Error(getReasonPhrase(StatusCodes.BAD_REQUEST));
