@@ -3,7 +3,7 @@ import { Request, Response } from "express";
 import expressAsyncHandler from "express-async-handler";
 import { STATUS_CODES } from "http";
 import { StatusCodes, getReasonPhrase } from "http-status-codes";
-import jsonwebtoken from "jsonwebtoken";
+import jsonwebtoken, { JwtPayload } from "jsonwebtoken";
 import nodemailer from "nodemailer";
 import { TypedRequestBody } from "zod-express-middleware";
 import prisma from "../../../shared/src/db";
@@ -18,10 +18,19 @@ export const generateAuthToken = (id: number) => {
   });
 };
 
-export const generateRefreshToken = (id: number) => {
-  return jsonwebtoken.sign({ id }, env.JWT_SECRET_REFRESH, {
+export const generateRefreshToken = async (id: number) => {
+  const jwtToken = jsonwebtoken.sign({ id }, env.JWT_SECRET_REFRESH, {
     expiresIn: "30d",
   });
+
+  await prisma.refreshToken.create({
+    data: {
+      token: jwtToken,
+      userId: id,
+    },
+  });
+
+  return jwtToken;
 };
 
 export const deleteExpiredSignUpDemandTokens = async () => {
@@ -56,8 +65,35 @@ export const refreshAccessToken = expressAsyncHandler(
     }
 
     try {
-      // todo....
+      const decoded = jsonwebtoken.verify(
+        token,
+        env.JWT_SECRET_REFRESH
+      ) as JwtPayload;
+
+      if (!decoded) {
+        res.status(StatusCodes.UNAUTHORIZED);
+        throw new Error(getReasonPhrase(StatusCodes.UNAUTHORIZED));
+      }
+
+      const refreshToken = await prisma.refreshToken.findUnique({
+        where: {
+          token,
+        },
+      });
+
+      if (
+        !refreshToken ||
+        decoded.id !== refreshToken.userId ||
+        refreshToken.expiredAt < new Date()
+      ) {
+        res.status(StatusCodes.UNAUTHORIZED);
+        throw new Error(getReasonPhrase(StatusCodes.UNAUTHORIZED));
+      }
+
+      const accessToken = generateAuthToken(refreshToken.userId);
+      res.status(200).json(accessToken);
     } catch (error) {
+      console.log(error);
       res.status(StatusCodes.INTERNAL_SERVER_ERROR);
       throw new Error(getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR));
     }
@@ -98,7 +134,7 @@ export const signIn = expressAsyncHandler(
         (await bcrypt.compare(password, user.password))
       ) {
         const token = generateAuthToken(user.id);
-        const refreshToken = generateRefreshToken(user.id);
+        const refreshToken = await generateRefreshToken(user.id);
 
         const { password, ...userWithoutPassword } = user;
         req.user = userWithoutPassword;

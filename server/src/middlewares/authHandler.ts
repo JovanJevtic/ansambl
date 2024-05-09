@@ -42,7 +42,7 @@ const protect = expressAsyncHandler(
           },
         });
 
-        if (!req.user) {
+        if (!user) {
           res.status(StatusCodes.UNAUTHORIZED);
           throw new Error(getReasonPhrase(StatusCodes.UNAUTHORIZED));
         }
@@ -62,3 +62,5 @@ const protect = expressAsyncHandler(
 );
 
 export default protect;
+
+//eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NCwiaWF0IjoxNzE1MjQ0NjIxLCJleHAiOjE3MTc4MzY2MjF9.MXa4lT4QvhgBNIbCDKPn590_0B5R-u3QUPGGbrQ0Un4
