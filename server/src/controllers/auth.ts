@@ -71,6 +71,12 @@ export const refreshAccessToken = expressAsyncHandler(
       ) as JwtPayload;
 
       if (!decoded) {
+        await prisma.refreshToken.delete({
+          where: {
+            token
+          }
+        })
+
         res.status(StatusCodes.UNAUTHORIZED);
         throw new Error(getReasonPhrase(StatusCodes.UNAUTHORIZED));
       }
@@ -86,6 +92,11 @@ export const refreshAccessToken = expressAsyncHandler(
         decoded.id !== refreshToken.userId ||
         refreshToken.expiredAt < new Date()
       ) {
+        await prisma.refreshToken.delete({
+          where: {
+            token
+          }
+        })
         res.status(StatusCodes.UNAUTHORIZED);
         throw new Error(getReasonPhrase(StatusCodes.UNAUTHORIZED));
       }
@@ -344,8 +355,18 @@ export const signUp = expressAsyncHandler(
   }
 );
 
-export const loggOut = expressAsyncHandler((req, res) => {
+export const loggOut = expressAsyncHandler(async (req: TypedRequestBody<typeof authSchemas.loggoutBody>, res) => {
+  const {
+    token
+  } = req.body
+  
   try {
+    const refreshToken = await prisma.refreshToken.delete({
+      where: {
+        token
+      }
+    })
+
     req.user = undefined;
     res.status(200).json("Logged out!");
   } catch (error) {
