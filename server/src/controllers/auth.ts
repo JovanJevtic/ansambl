@@ -400,3 +400,68 @@ export const loggOut = expressAsyncHandler(async (req: TypedRequestBody<typeof a
     throw new Error(getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR));
   }
 });
+
+export const googleSignIn = expressAsyncHandler(
+  async (
+    req: TypedRequestBody<typeof authSchemas.signInGoogleBody>, 
+    res: Response
+  ) => {
+    const {
+      email,
+      googleId,
+      imageUrl,
+      name
+    } = req.body
+
+    if (!name || !email || !googleId || !imageUrl) {
+      res.status(StatusCodes.BAD_REQUEST)
+      throw new Error(getReasonPhrase(StatusCodes.BAD_REQUEST))
+      return
+    }
+
+    try {
+      const userExists = await prisma.user.findUnique({
+        where: {
+          email
+        }    
+      })
+  
+      if (!userExists) {
+        res.status(200).json({ exists: false })        
+        // throw new Error(getReasonPhrase(StatusCodes.BAD_REQUEST))
+        return
+      }
+  
+      if (userExists && !userExists.googleId) {
+        const updated = await prisma.user.update({
+          where: {
+            email
+          },
+          data: {
+            googleId
+          }
+        })
+  
+        const { password, ...userWithoutPassword } = updated
+        const refreshToken = await generateRefreshToken(updated.id);
+        const accessToken = generateAuthToken(updated.id);
+        
+        res.status(200).json({ user: userWithoutPassword, refreshToken, accessToken });
+        return
+      } else if (userExists && userExists.googleId) {
+        const { password, ...userWithoutPassword } = userExists
+        const refreshToken = await generateRefreshToken(userExists.id);
+        const accessToken = generateAuthToken(userExists.id);
+        
+        res.status(200).json({ user: userWithoutPassword, refreshToken, accessToken });
+        return 
+      } else {
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR);
+        throw new Error(getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR));
+      }
+    } catch (error) {
+      console.log(error, "<<<<<<< error")
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR);
+        throw new Error(getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR));
+    }
+}) 

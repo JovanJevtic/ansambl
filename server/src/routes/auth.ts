@@ -49,6 +49,13 @@ router.post("/refresh-token",
   authController.refreshAccessToken
 )
 
+router.post("/googleSignIn", 
+  validateRequest({
+    body: authSchemas.signInGoogleBody
+  }),
+  authController.googleSignIn
+)
+
 //? Get the user
 //! @api/v1/auth/me
 //*
