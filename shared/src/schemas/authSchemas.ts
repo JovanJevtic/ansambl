@@ -19,4 +19,8 @@ export const signInBody = z.object({
 
 export const refreshAccessTokenBody = z.object({
   token: z.string().trim().min(1)
+}).strict()
+
+export const loggoutBody = z.object({
+  token: z.string().trim().min(1)
 })

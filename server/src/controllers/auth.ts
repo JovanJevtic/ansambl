@@ -28,9 +28,9 @@ export const generateRefreshToken = async (id: number) => {
       token: jwtToken,
       userId: id,
     },
-  });
+});
 
-  return jwtToken;
+  return jwtToken;  
 };
 
 export const deleteExpiredSignUpDemandTokens = async () => {
@@ -64,21 +64,32 @@ export const refreshAccessToken = expressAsyncHandler(
       throw new Error(getReasonPhrase(StatusCodes.BAD_REQUEST));
     }
 
-    try {
+  
       const decoded = jsonwebtoken.verify(
         token,
         env.JWT_SECRET_REFRESH
       ) as JwtPayload;
 
       if (!decoded) {
-        await prisma.refreshToken.delete({
-          where: {
-            token
-          }
-        })
+        // const refreshToken = await prisma.refreshToken.findUnique({
+        //   where: {
+        //     token
+        //   }
+        // })
+        try {
+          await prisma.refreshToken.delete({
+            where: {
+              token
+            } 
+          })          
 
-        res.status(StatusCodes.UNAUTHORIZED);
-        throw new Error(getReasonPhrase(StatusCodes.UNAUTHORIZED));
+          res.status(StatusCodes.UNAUTHORIZED);
+          throw new Error(getReasonPhrase(StatusCodes.UNAUTHORIZED));
+        } catch (error) {
+          res.status(StatusCodes.INTERNAL_SERVER_ERROR);
+          throw new Error(getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR));
+        }
+
       }
 
       const refreshToken = await prisma.refreshToken.findUnique({
@@ -87,8 +98,12 @@ export const refreshAccessToken = expressAsyncHandler(
         },
       });
 
+      if (!refreshToken) {
+        res.status(StatusCodes.UNAUTHORIZED);
+        throw new Error(getReasonPhrase(StatusCodes.UNAUTHORIZED));
+      }
+
       if (
-        !refreshToken ||
         decoded.id !== refreshToken.userId ||
         refreshToken.expiredAt < new Date()
       ) {
@@ -103,11 +118,12 @@ export const refreshAccessToken = expressAsyncHandler(
 
       const accessToken = generateAuthToken(refreshToken.userId);
       res.status(200).json(accessToken);
-    } catch (error) {
-      console.log(error);
-      res.status(StatusCodes.INTERNAL_SERVER_ERROR);
-      throw new Error(getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR));
-    }
+     
+      // catch (error) {
+      // console.log(error);
+      // res.status(StatusCodes.INTERNAL_SERVER_ERROR);
+      // throw new Error(getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR));
+    
   }
 );
 
