@@ -17,6 +17,13 @@ export const signInBody = z.object({
   password: z.string().min(1)
 }).strict()
 
+export const signInGoogleBody = z.object({
+  googleId: z.string().trim().min(1),
+  email: z.string().trim().email(),
+  imageUrl: z.string(),
+  name: z.string().trim().min(3)
+})
+
 export const refreshAccessTokenBody = z.object({
   token: z.string().trim().min(1)
 }).strict()
