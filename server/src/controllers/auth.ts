@@ -19,18 +19,22 @@ export const generateAuthToken = (id: number) => {
 };
 
 export const generateRefreshToken = async (id: number) => {
-  const jwtToken = jsonwebtoken.sign({ id }, env.JWT_SECRET_REFRESH, {
-    expiresIn: "30d",
-  });
-
-  await prisma.refreshToken.create({
-    data: {
-      token: jwtToken,
-      userId: id,
-    },
-});
-
-  return jwtToken;  
+  try {
+    const jwtToken = jsonwebtoken.sign({ id }, env.JWT_SECRET_REFRESH, {
+      expiresIn: "30d",
+    });
+  
+    await prisma.refreshToken.create({
+      data: {
+        token: jwtToken,
+        userId: id,
+      },
+    });
+  
+    return jwtToken;
+  } catch (error) {
+    throw new Error(getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR));
+  }  
 };
 
 export const deleteExpiredSignUpDemandTokens = async () => {
@@ -401,6 +405,57 @@ export const loggOut = expressAsyncHandler(async (req: TypedRequestBody<typeof a
   }
 });
 
+export const googleSignUp = expressAsyncHandler(
+  async (
+    req: TypedRequestBody<typeof authSchemas.signUpGoogleBody>,
+    res: Response
+  ) => {
+    const {
+      email,
+      googleId,
+      imageUrl,
+      name,
+      username,
+      type
+    } = req.body
+
+    if (!name || !username || !email || !googleId || !imageUrl || !type) {
+      res.status(StatusCodes.BAD_REQUEST);
+      throw new Error(getReasonPhrase(StatusCodes.BAD_REQUEST));
+    }
+
+    try {
+      const user = await prisma.user.create({
+        data: {
+          email,
+          type,
+          username,
+          googleId,
+          name,
+          pfp: imageUrl
+        }
+      })
+
+      const { 
+        password,
+        ...userWithoutPassword
+      } = user
+
+      const accessToken = generateAuthToken(user.id);
+      const refreshToken = await generateRefreshToken(user.id)
+      
+      res.status(200).json({
+        accessToken, 
+        refreshToken,
+        userWithoutPassword
+      })
+    } catch (error) {
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR);
+      throw new Error(getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR));
+    }
+  }
+)
+
 export const googleSignIn = expressAsyncHandler(
   async (
     req: TypedRequestBody<typeof authSchemas.signInGoogleBody>, 
@@ -416,7 +471,6 @@ export const googleSignIn = expressAsyncHandler(
     if (!name || !email || !googleId || !imageUrl) {
       res.status(StatusCodes.BAD_REQUEST)
       throw new Error(getReasonPhrase(StatusCodes.BAD_REQUEST))
-      return
     }
 
     try {
@@ -460,8 +514,7 @@ export const googleSignIn = expressAsyncHandler(
         throw new Error(getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR));
       }
     } catch (error) {
-      console.log(error, "<<<<<<< error")
       res.status(StatusCodes.INTERNAL_SERVER_ERROR);
-        throw new Error(getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR));
+      throw new Error(getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR));
     }
 }) 

@@ -19,9 +19,18 @@ export const signInBody = z.object({
 
 export const signInGoogleBody = z.object({
   googleId: z.string().trim().min(1),
-  email: z.string().trim().email(),
+  email: z.string().email("Not a valid email!").min(1),
   imageUrl: z.string(),
   name: z.string().trim().min(3)
+})
+
+export const signUpGoogleBody = z.object({
+  googleId: z.string().trim().min(1),
+  email: z.string().email("Not a valid email!").min(1),
+  imageUrl: z.string(),
+  name: z.string().trim().min(3),
+  username: z.string().trim().min(3),
+  type: z.enum(["PERSONAL", "ORGANIZATION"]).nullish(),
 })
 
 export const refreshAccessTokenBody = z.object({

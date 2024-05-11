@@ -51,6 +51,7 @@ model User {
   googleId String? @db.Text @unique
   role Role @default(USER)
   refreshToken RefreshToken[]
+  pfp String?
 }
 
 model SignUpDemandToken {
