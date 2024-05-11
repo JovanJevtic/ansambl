@@ -52,6 +52,7 @@ model User {
   role Role @default(USER)
   refreshToken RefreshToken[]
   pfp String?
+  verifyEmailAddressTokens VerifyEmailAddressToken[]
 }
 
 model SignUpDemandToken {
@@ -68,6 +69,14 @@ model RefreshToken {
   id Int @id @default(autoincrement())
   token String @unique
   expiredAt DateTime @default(dbgenerated("NOW() + INTERVAL '30 DAY'"))
+  userId Int
+  user User @relation(fields: [userId], references: [id])
+}
+
+model VerifyEmailAddressToken {
+  id Int @id @default(autoincrement())
+  token String @unique
+  expiredAt DateTime @default(dbgenerated("NOW() + INTERVAL '1 HOUR'"))
   userId Int
   user User @relation(fields: [userId], references: [id])
 }

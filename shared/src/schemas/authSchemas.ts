@@ -37,6 +37,10 @@ export const refreshAccessTokenBody = z.object({
   token: z.string().trim().min(1)
 }).strict()
 
+export const forgotPasswordBody = z.object({
+  email: z.string().email("Not a valid email!").min(1)
+})
+
 export const loggoutBody = z.object({
   token: z.string().trim().min(1)
 })
