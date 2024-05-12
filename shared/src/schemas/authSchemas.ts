@@ -41,6 +41,11 @@ export const forgotPasswordBody = z.object({
   email: z.string().email("Not a valid email!").min(1)
 })
 
+export const forgotPasswordConfirmation = z.object({
+  emailAddressVerificationTokenId: z.number(),
+  emailAddressVerificationTokenValue: z.number() 
+}).strict()
+
 export const loggoutBody = z.object({
   token: z.string().trim().min(1)
 })
