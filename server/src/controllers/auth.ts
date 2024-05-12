@@ -425,6 +425,17 @@ export const googleSignUp = expressAsyncHandler(
     }
 
     try {
+      const emailEquipped = await prisma.user.findUnique({
+        where: {
+          username
+        }
+      })
+
+      if (emailEquipped) {
+        res.status(StatusCodes.BAD_REQUEST);
+        throw new Error("Username equipped!");
+      }
+
       const user = await prisma.user.create({
         data: {
           email,
@@ -434,7 +445,7 @@ export const googleSignUp = expressAsyncHandler(
           name,
           pfp: imageUrl
         }
-      })
+      });
 
       const { 
         password,
@@ -518,3 +529,96 @@ export const googleSignIn = expressAsyncHandler(
       throw new Error(getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR));
     }
 }) 
+
+export const forgotPassword  = expressAsyncHandler(
+  async (
+    req: TypedRequestBody<typeof authSchemas.forgotPasswordBody>, 
+    res: Response
+  ) => {
+    const {
+      email
+    } = req.body
+
+    if (!email) {
+      res.status(StatusCodes.BAD_REQUEST);
+      throw new Error(getReasonPhrase(StatusCodes.BAD_REQUEST));
+    }
+
+    const user = await prisma.user.findUnique({
+      where: {
+        email
+      }
+    })
+
+    if (!user) {
+      res.status(StatusCodes.BAD_REQUEST);
+      throw new Error("User does not exists!");
+    }
+
+    try {
+      const token = Math.floor(10000 + Math.random() * 90000);
+
+      const verifyEmailAddressToken = await prisma.verifyEmailAddressToken.create({
+        data: {
+          token,
+          userId: user.id
+        }
+      })
+
+      const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+          user: env.NODEMAILER_AUTH_EMAIL,
+          pass: env.NODEMAILER_AUTH_PWD,
+        },
+      });
+
+      const html = `
+        <html>
+          <body>
+            <h4>Hello, ${capitalizeFirstLetter(user.username)}!</h4>
+            <p>Confirm your password reset request by entering the code below.</p>
+            <p>Your verification code is: <b> ${token} </b>.</p>
+          </body>
+        </html>     
+      `;
+
+      const mailOptions = {
+        from: env.NODEMAILER_AUTH_EMAIL,
+        to: email,
+        subject: "Password reset request - Ansambl!",
+        html: html,
+      };
+
+      const sendResult = transporter.sendMail(mailOptions);
+      res.status(200).json(verifyEmailAddressToken.id);
+    } catch (error) {
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR);
+      throw new Error(getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR));
+    }
+  }
+)
+
+export const changePassword = expressAsyncHandler(
+  async (
+    req: TypedRequestBody<typeof authSchemas.forgotPasswordConfirmation>,
+    res: Response
+  ) => {
+    const {
+      emailAddressVerificationTokenId,
+      emailAddressVerificationTokenValue
+    } = req.body
+
+    if (!emailAddressVerificationTokenId || !emailAddressVerificationTokenValue) {
+      res.status(StatusCodes.BAD_REQUEST);
+      throw new Error(getReasonPhrase(StatusCodes.BAD_REQUEST));     
+    }
+
+    try {
+      
+    } catch (err) {
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR)
+      throw new Error(getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR));
+    }
+  }
+)
