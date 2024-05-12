@@ -75,7 +75,7 @@ model RefreshToken {
 
 model VerifyEmailAddressToken {
   id Int @id @default(autoincrement())
-  token String @unique
+  token Int @unique
   expiredAt DateTime @default(dbgenerated("NOW() + INTERVAL '1 HOUR'"))
   userId Int
   user User @relation(fields: [userId], references: [id])
