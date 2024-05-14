@@ -132,74 +132,6 @@ export const refreshAccessToken = expressAsyncHandler(
       res.status(StatusCodes.INTERNAL_SERVER_ERROR);
       throw new Error(getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR));
     }
-
-    // const decoded = jsonwebtoken.verify(
-    //   token,
-    //   env.JWT_SECRET_REFRESH
-    // ) as JwtPayload;
-
-    // if (!decoded) {
-    //   try {
-    //     await prisma.refreshToken.delete({
-    //       where: {
-    //         token,
-    //       },
-    //     });
-
-    //     res.status(StatusCodes.UNAUTHORIZED);
-    //     throw new Error(getReasonPhrase(StatusCodes.UNAUTHORIZED));
-    //   } catch (error) {
-    //     res.status(StatusCodes.INTERNAL_SERVER_ERROR);
-    //     throw new Error(getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR));
-    //   }
-    // }
-
-    // const refreshToken = await prisma.refreshToken.findUnique({
-    //   where: {
-    //     token,
-    //   },
-    // });
-
-    // if (!refreshToken) {
-    //   res.status(StatusCodes.UNAUTHORIZED);
-    //   throw new Error(getReasonPhrase(StatusCodes.UNAUTHORIZED));
-    // }
-
-    // if (
-    //   new Date(refreshToken.expiredAt) <
-    //   new Date(new Date().getTime() + 7 * 24 * 60 * 60 * 1000)
-    // ) {
-    //   const D30 = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-    //   const updejted = await prisma.refreshToken.update({
-    //     where: {
-    //       id: refreshToken.id,
-    //     },
-    //     data: {
-    //       expiredAt: D30,
-    //     },
-    //   });
-    // }
-
-    // if (
-    //   decoded.id !== refreshToken.userId ||
-    //   refreshToken.expiredAt < new Date()
-    // ) {
-    //   try {
-    //     await prisma.refreshToken.delete({
-    //       where: {
-    //         token,
-    //       },
-    //     });
-    //     res.status(StatusCodes.UNAUTHORIZED);
-    //     throw new Error(getReasonPhrase(StatusCodes.UNAUTHORIZED));
-    //   } catch (error) {
-    //     res.status(StatusCodes.INTERNAL_SERVER_ERROR);
-    //     throw new Error(getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR));
-    //   }
-    // }
-
-    // const accessToken = generateAuthToken(refreshToken.userId);
-    // res.status(200).json(accessToken);
   }
 );
 
@@ -650,7 +582,7 @@ export const forgotPassword = expressAsyncHandler(
   }
 );
 
-export const changePassword = expressAsyncHandler(
+export const forgotPasswordConfirmation = expressAsyncHandler(
   async (
     req: TypedRequestBody<typeof authSchemas.forgotPasswordConfirmation>,
     res: Response
@@ -692,24 +624,32 @@ export const changePassword = expressAsyncHandler(
           throw new Error(getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR));
         }
 
+        await prisma.verifyEmailAddressToken.delete({
+          where: {
+            id: emailAddressVerificationTokenId,
+          },
+        });
+
         const accessToken = generateAuthToken(user.id);
         const refreshToken = await generateRefreshToken(user.id);
 
         const { password, ...userWithoutPassword } = user;
 
         res.status(200).json({
-          userWithoutPassword,
+          user: userWithoutPassword,
           accessToken,
           refreshToken,
         });
       } else {
         res.status(StatusCodes.UNAUTHORIZED);
-        // throw new Error(getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR));
         throw new Error("Incorrect code!");
       }
     } catch (err) {
       res.status(StatusCodes.INTERNAL_SERVER_ERROR);
-      throw new Error(getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR));
+      // throw new Error(getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR));
+      throw (
+        err || new Error(getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR))
+      );
     }
   }
 );

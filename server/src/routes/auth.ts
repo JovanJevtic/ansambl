@@ -35,31 +35,47 @@ router.post(
 //? Signin
 //! @api/v1/auth/signin
 //* {  }
-router.post("/signin", 
+router.post(
+  "/signin",
   validateRequest({
-    body: authSchemas.signInBody
+    body: authSchemas.signInBody,
   }),
   authController.signIn
 );
 
-router.post("/refresh-token",
+router.post(
+  "/refresh-token",
   validateRequest({
-    body: authSchemas.refreshAccessTokenBody
+    body: authSchemas.refreshAccessTokenBody,
   }),
   authController.refreshAccessToken
-)
+);
 
-router.post("/googleSignIn", 
+router.post(
+  "/googleSignIn",
   validateRequest({
-    body: authSchemas.signInGoogleBody
+    body: authSchemas.signInGoogleBody,
   }),
   authController.googleSignIn
-)
+);
 
-//? Get the user
-//! @api/v1/auth/me
-//*
 router.get("/me", protect, authController.getMe);
+
+router.post(
+  "/forgot-password",
+  validateRequest({
+    body: authSchemas.forgotPasswordBody,
+  }),
+  authController.forgotPassword
+);
+
+router.post(
+  "/forgot-password-confirmation",
+  validateRequest({
+    body: authSchemas.forgotPasswordConfirmation,
+  }),
+  authController.forgotPasswordConfirmation
+);
 
 router.post("/loggout", protect, authController.loggOut);
 
