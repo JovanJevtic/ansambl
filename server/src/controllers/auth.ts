@@ -707,3 +707,26 @@ export const changePassword = expressAsyncHandler(
     }
   }
 );
+
+export const deleteMe = expressAsyncHandler(async (req, res) => {
+  if (!req.user) {
+    res.status(StatusCodes.UNAUTHORIZED);
+    throw new Error(getReasonPhrase(StatusCodes.UNAUTHORIZED));
+  }
+
+  try {
+    await prisma.user.delete({
+      where: {
+        id: req.user.id,
+      },
+    });
+    res.status(200).json("ok");
+  } catch (error) {
+    if (!res.status) {
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+    throw (
+      error || new Error(getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR))
+    );
+  }
+});

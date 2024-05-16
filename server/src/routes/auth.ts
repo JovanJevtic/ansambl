@@ -86,6 +86,10 @@ router.post(
   authController.changePassword
 );
 
+//! Todo: Current Sessions (enables users to see where are they logged in)
+//! Todo: Delete account
+router.post("/deleteMe", protect, authController.deleteMe);
+
 router.post("/loggout", protect, authController.loggOut);
 
 export default router;
