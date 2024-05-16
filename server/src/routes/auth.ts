@@ -72,9 +72,18 @@ router.post(
 router.post(
   "/forgot-password-confirmation",
   validateRequest({
-    body: authSchemas.forgotPasswordConfirmation,
+    body: authSchemas.forgotPasswordConfirmationBody,
   }),
   authController.forgotPasswordConfirmation
+);
+
+router.post(
+  "/change-password",
+  protect,
+  validateRequest({
+    body: authSchemas.changePasswordBody,
+  }),
+  authController.changePassword
 );
 
 router.post("/loggout", protect, authController.loggOut);

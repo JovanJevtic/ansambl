@@ -14,7 +14,7 @@ import sendCronResponseEmail from "../utils/sendCronResponseEmail";
 
 export const generateAuthToken = (id: number) => {
   return jsonwebtoken.sign({ id }, env.JWT_SECRET, {
-    // expiresIn: "5m",
+    expiresIn: "15m",
   });
 };
 
@@ -600,7 +600,7 @@ export const forgotPassword = expressAsyncHandler(
 
 export const forgotPasswordConfirmation = expressAsyncHandler(
   async (
-    req: TypedRequestBody<typeof authSchemas.forgotPasswordConfirmation>,
+    req: TypedRequestBody<typeof authSchemas.forgotPasswordConfirmationBody>,
     res: Response
   ) => {
     const {
@@ -665,6 +665,44 @@ export const forgotPasswordConfirmation = expressAsyncHandler(
       // throw new Error(getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR));
       throw (
         err || new Error(getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR))
+      );
+    }
+  }
+);
+
+export const changePassword = expressAsyncHandler(
+  async (
+    req: TypedRequestBody<typeof authSchemas.changePasswordBody>,
+    res: Response
+  ) => {
+    const { newPassword } = req.body;
+
+    if (!newPassword || !req.user) {
+      console.log("bla");
+      res.status(StatusCodes.BAD_REQUEST);
+      throw new Error(getReasonPhrase(StatusCodes.BAD_REQUEST));
+    }
+
+    try {
+      const salt = await bcrypt.genSalt(10);
+      const hashPassword = await bcrypt.hash(newPassword, salt);
+
+      await prisma.user.update({
+        where: {
+          id: req.user.id,
+        },
+        data: {
+          password: hashPassword,
+        },
+      });
+
+      res.status(200).json("ok");
+    } catch (error) {
+      if (!res.status) {
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR);
+      }
+      throw (
+        error || new Error(getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR))
       );
     }
   }
