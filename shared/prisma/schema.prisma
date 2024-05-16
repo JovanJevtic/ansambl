@@ -70,7 +70,7 @@ model RefreshToken {
   token String @unique
   expiredAt DateTime @default(dbgenerated("NOW() + INTERVAL '30 DAY'"))
   userId Int
-  user User @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model VerifyEmailAddressToken {
