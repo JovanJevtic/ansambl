@@ -128,9 +128,13 @@ export const refreshAccessToken = expressAsyncHandler(
       const accessToken = generateAuthToken(refreshToken.userId);
       res.status(200).json(accessToken);
     } catch (error) {
-      console.log(error, "<<<<<<<");
-      res.status(StatusCodes.INTERNAL_SERVER_ERROR);
-      throw new Error(getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR));
+      // res.status(StatusCodes.INTERNAL_SERVER_ERROR);
+      if (!res.status) {
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR);
+      }
+      throw (
+        error || new Error(getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR))
+      );
     }
   }
 );
@@ -187,7 +191,9 @@ export const signIn = expressAsyncHandler(
       }
     } catch (error) {
       res.status(StatusCodes.INTERNAL_SERVER_ERROR);
-      throw new Error(getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR));
+      throw (
+        error || new Error(getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR))
+      );
     }
   }
 );
@@ -335,19 +341,24 @@ export const signUp = expressAsyncHandler(
             },
           });
 
+          const accessToken = generateAuthToken(user.id);
+          const refreshToken = await generateRefreshToken(user.id);
+
           await prisma.signUpDemandToken.delete({
             where: {
               id: signUpDemandToken.id,
             },
           });
 
-          res.json(user).status(200);
+          res.status(200).json({
+            user,
+            accessToken,
+            refreshToken,
+          });
         } catch (error) {
           res.json(STATUS_CODES.INTERNAL_SERVER_ERROR);
           throw new Error(
-            getReasonPhrase(
-              STATUS_CODES.INTERNAL_SERVER_ERROR || "Unauthorized!"
-            )
+            getReasonPhrase(STATUS_CODES.UNAUTHORIZED || "Unauthorized!")
           );
         }
       } else {
@@ -360,15 +371,20 @@ export const signUp = expressAsyncHandler(
           },
         });
 
+        const accessToken = generateAuthToken(updatedUser.id);
+        const refreshToken = await generateRefreshToken(updatedUser.id);
+
         await prisma.signUpDemandToken.delete({
           where: {
             id: signUpDemandToken.id,
           },
         });
 
-        res.json(updatedUser);
-        // res.json(StatusCodes.UNAUTHORIZED);
-        // throw new Error("User with this email already exists");
+        res.status(200).json({
+          user: updatedUser,
+          accessToken,
+          refreshToken,
+        });
       }
     } else {
       res.status(StatusCodes.UNAUTHORIZED);
