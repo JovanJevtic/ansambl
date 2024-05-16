@@ -21,7 +21,7 @@ app.use(errorHandler);
 
 deleteExpiredSignUpDemandTokensCronJob();
 
-const PORT = 3000 || env.PORT;
+const PORT = 10000 || env.PORT;
 
 app.listen(PORT, () => {
   return console.log(
