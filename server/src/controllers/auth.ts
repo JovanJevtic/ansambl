@@ -14,7 +14,7 @@ import sendCronResponseEmail from "../utils/sendCronResponseEmail";
 
 export const generateAuthToken = (id: number) => {
   return jsonwebtoken.sign({ id }, env.JWT_SECRET, {
-    // expiresIn: "5m",
+    expiresIn: "15m",
   });
 };
 
@@ -128,9 +128,13 @@ export const refreshAccessToken = expressAsyncHandler(
       const accessToken = generateAuthToken(refreshToken.userId);
       res.status(200).json(accessToken);
     } catch (error) {
-      console.log(error, "<<<<<<<");
-      res.status(StatusCodes.INTERNAL_SERVER_ERROR);
-      throw new Error(getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR));
+      // res.status(StatusCodes.INTERNAL_SERVER_ERROR);
+      if (!res.status) {
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR);
+      }
+      throw (
+        error || new Error(getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR))
+      );
     }
   }
 );
@@ -187,7 +191,9 @@ export const signIn = expressAsyncHandler(
       }
     } catch (error) {
       res.status(StatusCodes.INTERNAL_SERVER_ERROR);
-      throw new Error(getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR));
+      throw (
+        error || new Error(getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR))
+      );
     }
   }
 );
@@ -335,19 +341,24 @@ export const signUp = expressAsyncHandler(
             },
           });
 
+          const accessToken = generateAuthToken(user.id);
+          const refreshToken = await generateRefreshToken(user.id);
+
           await prisma.signUpDemandToken.delete({
             where: {
               id: signUpDemandToken.id,
             },
           });
 
-          res.json(user).status(200);
+          res.status(200).json({
+            user,
+            accessToken,
+            refreshToken,
+          });
         } catch (error) {
           res.json(STATUS_CODES.INTERNAL_SERVER_ERROR);
           throw new Error(
-            getReasonPhrase(
-              STATUS_CODES.INTERNAL_SERVER_ERROR || "Unauthorized!"
-            )
+            getReasonPhrase(STATUS_CODES.UNAUTHORIZED || "Unauthorized!")
           );
         }
       } else {
@@ -360,15 +371,20 @@ export const signUp = expressAsyncHandler(
           },
         });
 
+        const accessToken = generateAuthToken(updatedUser.id);
+        const refreshToken = await generateRefreshToken(updatedUser.id);
+
         await prisma.signUpDemandToken.delete({
           where: {
             id: signUpDemandToken.id,
           },
         });
 
-        res.json(updatedUser);
-        // res.json(StatusCodes.UNAUTHORIZED);
-        // throw new Error("User with this email already exists");
+        res.status(200).json({
+          user: updatedUser,
+          accessToken,
+          refreshToken,
+        });
       }
     } else {
       res.status(StatusCodes.UNAUTHORIZED);
@@ -584,7 +600,7 @@ export const forgotPassword = expressAsyncHandler(
 
 export const forgotPasswordConfirmation = expressAsyncHandler(
   async (
-    req: TypedRequestBody<typeof authSchemas.forgotPasswordConfirmation>,
+    req: TypedRequestBody<typeof authSchemas.forgotPasswordConfirmationBody>,
     res: Response
   ) => {
     const {
@@ -653,3 +669,64 @@ export const forgotPasswordConfirmation = expressAsyncHandler(
     }
   }
 );
+
+export const changePassword = expressAsyncHandler(
+  async (
+    req: TypedRequestBody<typeof authSchemas.changePasswordBody>,
+    res: Response
+  ) => {
+    const { newPassword } = req.body;
+
+    if (!newPassword || !req.user) {
+      console.log("bla");
+      res.status(StatusCodes.BAD_REQUEST);
+      throw new Error(getReasonPhrase(StatusCodes.BAD_REQUEST));
+    }
+
+    try {
+      const salt = await bcrypt.genSalt(10);
+      const hashPassword = await bcrypt.hash(newPassword, salt);
+
+      await prisma.user.update({
+        where: {
+          id: req.user.id,
+        },
+        data: {
+          password: hashPassword,
+        },
+      });
+
+      res.status(200).json("ok");
+    } catch (error) {
+      if (!res.status) {
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR);
+      }
+      throw (
+        error || new Error(getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR))
+      );
+    }
+  }
+);
+
+export const deleteMe = expressAsyncHandler(async (req, res) => {
+  if (!req.user) {
+    res.status(StatusCodes.UNAUTHORIZED);
+    throw new Error(getReasonPhrase(StatusCodes.UNAUTHORIZED));
+  }
+
+  try {
+    await prisma.user.delete({
+      where: {
+        id: req.user.id,
+      },
+    });
+    res.status(200).json("ok");
+  } catch (error) {
+    if (!res.status) {
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+    throw (
+      error || new Error(getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR))
+    );
+  }
+});

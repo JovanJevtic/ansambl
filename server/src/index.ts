@@ -1,6 +1,7 @@
 import "dotenv/config";
 import express from "express";
 import helmet from "helmet";
+import morgan from "morgan";
 import env from "./utils/env";
 
 import errorHandler from "./middlewares/errorHandler";
@@ -12,6 +13,7 @@ const app = express();
 app.use(express.json());
 
 app.use(helmet());
+app.use(morgan("dev"));
 
 app.use("/api/v1", v1);
 
@@ -21,7 +23,7 @@ deleteExpiredSignUpDemandTokensCronJob();
 
 const PORT = 3000 || env.PORT;
 
-app.listen(PORT, () => {
+app.listen(PORT, "0.0.0.0", () => {
   return console.log(
     `Express server is listening at http://localhost:${PORT} 🚀`
   );

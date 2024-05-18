@@ -72,11 +72,25 @@ router.post(
 router.post(
   "/forgot-password-confirmation",
   validateRequest({
-    body: authSchemas.forgotPasswordConfirmation,
+    body: authSchemas.forgotPasswordConfirmationBody,
   }),
   authController.forgotPasswordConfirmation
 );
 
+router.post(
+  "/change-password",
+  protect,
+  validateRequest({
+    body: authSchemas.changePasswordBody,
+  }),
+  authController.changePassword
+);
+
 router.post("/loggout", protect, authController.loggOut);
+
+//! Todo: Delete account
+router.post("/deleteMe", protect, authController.deleteMe);
+
+//! Todo: Current Sessions (enables users to see where are they logged in)
 
 export default router;
