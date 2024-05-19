@@ -81,7 +81,7 @@ router.post(
   "/change-password",
   protect,
   validateRequest({
-    body: authSchemas.changePasswordBody,
+    body: authSchemas.changePassowrdBody,
   }),
   authController.changePassword
 );
