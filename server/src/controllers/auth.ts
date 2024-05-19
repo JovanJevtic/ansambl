@@ -672,7 +672,7 @@ export const forgotPasswordConfirmation = expressAsyncHandler(
 
 export const changePassword = expressAsyncHandler(
   async (
-    req: TypedRequestBody<typeof authSchemas.changePassowrdBody>,
+    req: TypedRequestBody<typeof authSchemas.changePasswordBody>,
     res: Response
   ) => {
     const { newPassword } = req.body;

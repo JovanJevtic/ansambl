@@ -1,35 +1,42 @@
-# Use an official Node.js runtime as a parent image
-FROM node:16
+# Use a stable Node.js runtime as a parent image
+FROM node:22.2
 
 # Set the working directory inside the container
 WORKDIR /usr/src/app
 
-# Copy package.json and package-lock.json files for both server and shared folders
+# Copy package.json, package-lock.json and tsconfig.json files
+COPY package*.json ./
+COPY tsconfig.json ./
+
+# Copy server and shared package.json files
 COPY server/package*.json ./server/
 COPY shared/package*.json ./shared/
 
-# Install dependencies for both server and shared folders
+# Install root dependencies
+RUN npm install
+
+# Install server dependencies
 RUN cd server && npm install
+
+# Install shared dependencies
 RUN cd shared && npm install
 
 # Copy the rest of the server and shared code
 COPY server/ ./server/
 COPY shared/ ./shared/
 
-# Generate Prisma client
-RUN cd shared && npx prisma generate
+# Build the TypeScript code
+RUN npx tsc -p .
+
 # Copy the prisma folder to dist/shared/
-COPY shared/prisma ./server/dist/shared/prisma
+RUN cd shared && npx prisma generate
+RUN cp -r ./shared/prisma ./dist/shared/prisma
 
-# Build the server code
-RUN cd server && npm run build
-
-# Set the working directory to the server
-WORKDIR /usr/src/app/server
-ENV NODE_PATH=./shared/dist
+# Set the working directory to the built server
+WORKDIR /usr/src/app/dist/server
 
 # Expose the port the app runs on
 EXPOSE 3000
 
 # Command to run the app
-CMD [ "node", "dist/server/src/index.js" ]
+CMD [ "node", "src/index.js" ]

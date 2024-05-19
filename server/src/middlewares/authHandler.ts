@@ -2,8 +2,8 @@ import { NextFunction, Request, Response } from "express";
 import expressAsyncHandler from "express-async-handler";
 import { StatusCodes, getReasonPhrase } from "http-status-codes";
 import jsonwebtoken, { JwtPayload } from "jsonwebtoken";
-import { UserWithoutPassword } from "src/types/express";
 import prisma from "../../../shared/src/db";
+import { UserWithoutPassword } from "../types/express/index";
 import env from "../utils/env";
 
 const protect = expressAsyncHandler(
