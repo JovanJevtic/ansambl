@@ -25,6 +25,10 @@ RUN cd shared && npm install
 COPY server/ ./server/
 COPY shared/ ./shared/
 
+# Install dependencies for server and shared
+RUN cd server && npm install
+RUN cd shared && npm install
+
 # Build the TypeScript code
 RUN npx tsc -p .
 
@@ -32,8 +36,16 @@ RUN npx tsc -p .
 RUN cd shared && npx prisma generate
 RUN cp -r ./shared/prisma ./dist/shared/prisma
 
+RUN mv /usr/src/app/server/node_modules /usr/src/app/dist/server/
+RUN mv /usr/src/app/shared/node_modules /usr/src/app/dist/shared/
+
+RUN mv /usr/src/app/shared/.env /usr/src/app/dist/shared/
+RUN mv /usr/src/app/server/.env /usr/src/app/dist/server/
+
+
 # Set the working directory to the built server
-WORKDIR /usr/src/app/dist/server
+WORKDIR /usr/src/app/dist/server/
+ENV NODE_ENV=prod
 
 # Expose the port the app runs on
 EXPOSE 3000

@@ -1,11 +1,9 @@
-import dotenv from "dotenv";
+import "dotenv/config";
 import express from "express";
 import helmet from "helmet";
 import morgan from "morgan";
-import env from "./utils/env";
-dotenv.config();
-
 import errorHandler from "./middlewares/errorHandler";
+import env from "./utils/env";
 
 import v1 from "./routes/index";
 import deleteExpiredSignUpDemandTokensCronJob from "./utils/cronJobs";
