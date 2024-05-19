@@ -54,7 +54,7 @@ export const forgotPasswordConfirmationBody = z
   })
   .strict();
 
-export const changePassowrdBody = z
+export const changePasswordBody = z
   .object({
     newPassword: z.string().trim().min(8),
   })

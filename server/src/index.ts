@@ -21,9 +21,8 @@ app.use(errorHandler);
 
 deleteExpiredSignUpDemandTokensCronJob();
 
-const PORT = 3000 || env.PORT;
-
-app.listen(PORT, "0.0.0.0", () => {
+const PORT = env.PORT || 10000;
+app.listen(PORT, () => {
   return console.log(
     `Express server is listening at http://localhost:${PORT} 🚀`
   );
