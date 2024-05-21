@@ -13,6 +13,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Debug SERVER_ENV_FILE and SHARED_ENV_FILE
+        run: |
+          echo "SERVER_ENV_FILE: $SERVER_ENV_FILE"
+          echo "SHARED_ENV_FILE: $SHARED_ENV_FILE"
+
       - name: Copy server .env file
         env:
           SERVER_ENV_FILE: ${{ secrets.SERVER_ENV }}
