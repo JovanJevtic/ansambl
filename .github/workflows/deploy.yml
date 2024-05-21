@@ -48,4 +48,4 @@ jobs:
           -H "Authorization: Bearer $RENDER_API_KEY" \
           -H "Accept: application/json" \
           -H "Content-Type: application/json" \
-          --data '{"clearCache": false}'
+          --data '{"clearCache":false}'
