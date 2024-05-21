@@ -30,11 +30,11 @@ RUN cd server && npm install
 RUN cd shared && npm install
 
 # Build the TypeScript code
-RUN npx tsc -p . && cd shared && npx prisma generate && cp -r ./shared/prisma ./dist/shared/prisma
+RUN npx tsc -p .
 
-# # Copy the prisma folder to dist/shared/
-# RUN cd shared && npx prisma generate
-# RUN cp -r ./shared/prisma ./dist/shared/prisma
+# Copy the prisma folder to dist/shared/
+RUN cd shared && npx prisma generate
+RUN cp -r ./shared/prisma ./dist/shared/prisma
 
 
 RUN mv /usr/src/app/server/node_modules /usr/src/app/dist/server/
