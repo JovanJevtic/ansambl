@@ -3,5 +3,5 @@ services:
     name: ansambl
     env: docker
     plan: free
-    dockerfilePath: ./server/Dockerfile
+    dockerfilePath: ./Dockerfile
     autoDeploy: true
