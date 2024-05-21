@@ -13,7 +13,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-        - name: Copy server .env file
+      - name: Copy server .env file
         env:
           SERVER_ENV_FILE: ${{ secrets.SERVER_ENV }}
         run: |
@@ -24,7 +24,6 @@ jobs:
           SHARED_ENV_FILE: ${{ secrets.SHARED_ENV }}
         run: |
           cp "${SHARED_ENV_FILE}" shared/.env
-
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
