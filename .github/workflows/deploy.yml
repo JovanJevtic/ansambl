@@ -40,12 +40,16 @@ jobs:
         run: |
           docker buildx build --push --tag ${{ secrets.DOCKER_HUB_USERNAME }}/ansambl:latest .
 
+      - name: Install jq
+        run: sudo apt-get install -y jq
+
       - name: Trigger Render deploy
         env:
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
         run: |
+          data=$(jq -n --arg clearCache false '{clearCache: $clearCache}')
           curl -X POST "https://api.render.com/v1/services/cp5941q1hbls73fbvgcg/deploys" \
           -H "Authorization: Bearer $RENDER_API_KEY" \
           -H "Accept: application/json" \
           -H "Content-Type: application/json" \
-          --data '{"clearCache":false}'
+          --data "$data"
