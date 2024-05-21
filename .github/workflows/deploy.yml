@@ -10,6 +10,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Copy server .env file
+        env:
+          SERVER_ENV_FILE: ${{ secrets.SERVER_ENV }}
+        run: |
+          cp "${SERVER_ENV_FILE}" server/.env
+
+      - name: Copy shared .env file
+        env:
+          SHARED_ENV_FILE: ${{ secrets.SHARED_ENV }}
+        run: |
+          cp "${SHARED_ENV_FILE}" shared/.env
+
       - name: Checkout code
         uses: actions/checkout@v4
 
