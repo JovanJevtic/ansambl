@@ -34,10 +34,10 @@ RUN set +e \
     && set -e
 
 RUN set +e \
-    && cd shared && npx prisma generate \
+    && cd shared && npx prisma generate && cp -r ./shared/prisma ./dist/shared/prisma \
     && set -e
 
-RUN cp -r ./shared/prisma ./dist/shared/prisma
+# RUN cp -r ./shared/prisma ./dist/shared/prisma
 
 
 RUN mv /usr/src/app/server/node_modules /usr/src/app/dist/server/
