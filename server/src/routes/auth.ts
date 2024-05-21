@@ -88,6 +88,14 @@ router.post(
 
 router.post("/loggout", protect, authController.loggOut);
 
+//! Todo:
+//!    limiting - brute force protection,
+//!    rate limit reset password,
+//!    secondary recovery email,
+//!    forcet loggout when reseting password
+//!    change email
+//!    alret when accessing from unexpected locations
+
 //! Todo: Delete account
 router.post("/deleteMe", protect, authController.deleteMe);
 
