@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: ansambl
+    env: docker
+    plan: free
+    dockerfilePath: ./server/Dockerfile
+    autoDeploy: true
