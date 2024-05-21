@@ -47,7 +47,7 @@ jobs:
         env:
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
         run: |
-          data=$(jq -n --arg clearCache false '{clearCache: clear}')
+          data=$(jq -n --arg clearCache "clear" '{clearCache: $clearCache}')
           curl -X POST "https://api.render.com/v1/services/cp5941q1hbls73fbvgcg/deploys" \
           -H "Authorization: Bearer $RENDER_API_KEY" \
           -H "Accept: application/json" \
