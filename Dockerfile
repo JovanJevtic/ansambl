@@ -29,13 +29,17 @@ COPY shared/ ./shared/
 RUN cd server && npm install
 RUN cd shared && npm install
 
-RUN set +e \
-    && npx tsc -p . \
-    && set -e
+RUN cd shared && npx prisma generate
 
-RUN set +e \
-    && cd shared && npx prisma generate && cp -r ./shared/prisma ./dist/shared/prisma \
-    && set -e
+# RUN set +e \
+#     && npx tsc -p . \
+#     && set -e
+
+# RUN set +e \
+#     && cp -r ./shared/prisma ./dist/shared/prisma \
+#     && set -e
+
+RUN npx tsc -p . && cp -r ./shared/prisma ./dist/shared/prisma
 
 # RUN cp -r ./shared/prisma ./dist/shared/prisma
 
