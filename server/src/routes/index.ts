@@ -6,6 +6,7 @@ import usersRoutes from "./users";
 const router = express.Router();
 
 router.get("/render/test", (req, res) => {
+  console.log("/render/test");
   res.status(200).send("live");
 });
 

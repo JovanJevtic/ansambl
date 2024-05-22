@@ -38,6 +38,10 @@ export const generateRefreshToken = async (id: number) => {
 };
 
 export const deleteExpiredSignUpDemandTokens = async () => {
+  if (env.NODE_ENV === "dev" || env.NODE_ENV === "test") {
+    return;
+  }
+
   try {
     const deletedTokens = await prisma.signUpDemandToken.deleteMany({
       where: {
