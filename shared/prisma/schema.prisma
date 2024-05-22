@@ -44,6 +44,7 @@ model User {
   gender Gender?
   adress  String[]
   interests Category[]
+  pfp String?
   isPremium Boolean @default(false)
   email String @unique @db.Text
   phone String? @db.Text @unique
@@ -51,9 +52,69 @@ model User {
   googleId String? @db.Text @unique
   role Role @default(USER)
   refreshToken RefreshToken[]
-  pfp String?
+
+  createdEvents Event[] @relation("Creator")
+
   verifyEmailAddressTokens VerifyEmailAddressToken[]
+  participatedTo EventParticipation[]
+
+  bookmarkedEvents Bookmark[]
 }
+
+model Event {
+  id Int @id @default(autoincrement())
+  title String @db.VarChar(40)
+  description String @db.VarChar(50)
+  isPrivate Boolean
+  address String
+  city  String?
+  country String?
+  latitude  Float
+  longitude Float
+  dateTime DateTime
+
+  creatorId Int
+  creator User @relation("Creator", fields: [creatorId], references: [id])
+
+  participants EventParticipation[]
+
+  bookmarkedBy Bookmark[]
+}
+
+model Bookmark {
+  id      Int    @id @default(autoincrement())
+  userId  Int
+  eventId Int
+
+  user    User   @relation(fields: [userId], references: [id])
+  event   Event  @relation(fields: [eventId], references: [id])
+
+  @@unique([userId, eventId])
+}
+
+enum EventInviteStatus {
+  PENDING
+  ACCEPTED
+}
+
+enum EventParticipationStatus {
+  PENDING
+  ACCEPTED
+}
+
+model EventParticipation {
+  id Int @id @default(autoincrement())
+  eventId Int 
+  userId Int 
+  status EventParticipationStatus
+  createdAt DateTime @default(now())
+
+  event Event @relation(fields: [eventId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([userId, eventId])
+}
+
 
 model SignUpDemandToken {
   id Int @id @default(autoincrement())
