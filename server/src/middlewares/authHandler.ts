@@ -39,6 +39,9 @@ const protect = expressAsyncHandler(
             role: true,
             type: true,
             username: true,
+            followers: true,
+            following: true,
+            pfp: true       
           },
         });
 
@@ -62,5 +65,3 @@ const protect = expressAsyncHandler(
 );
 
 export default protect;
-
-//eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NCwiaWF0IjoxNzE1MjQ0NjIxLCJleHAiOjE3MTc4MzY2MjF9.MXa4lT4QvhgBNIbCDKPn590_0B5R-u3QUPGGbrQ0Un4
