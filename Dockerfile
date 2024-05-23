@@ -50,8 +50,7 @@ RUN mv /usr/src/app/shared/node_modules /usr/src/app/dist/shared/
 RUN mv /usr/src/app/shared/.env /usr/src/app/dist/shared/
 RUN mv /usr/src/app/server/.env /usr/src/app/dist/server/
 
-
-# Set the working directory to the built server
+# Set the working directory to the built server 
 WORKDIR /usr/src/app/dist/server/
 ENV NODE_ENV=prod
 
