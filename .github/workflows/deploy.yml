@@ -44,11 +44,7 @@ jobs:
 
       - name: Build and push Docker image
         run: |
-          docker buildx build --no-cache --tag ${{ secrets.DOCKER_HUB_USERNAME }}/ansambl:latest .
-
-      - name: Run Docker container with .env files
-        run: |
-          docker run --env-file server/.env --env-file shared/.env ${{ secrets.DOCKER_HUB_USERNAME }}/ansambl:latest
+          docker buildx build --no-cache --push --tag ${{ secrets.DOCKER_HUB_USERNAME }}/ansambl:latest .
 
       - name: Install jq
         run: sudo apt-get install -y jq
