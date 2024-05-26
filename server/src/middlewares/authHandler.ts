@@ -41,7 +41,7 @@ const protect = expressAsyncHandler(
             username: true,
             followers: true,
             following: true,
-            pfp: true       
+            pfp: true,
           },
         });
 
