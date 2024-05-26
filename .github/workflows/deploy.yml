@@ -25,11 +25,11 @@ jobs:
         run: |
           printf "%s" "${SHARED_ENV_FILE}" > shared/.env
 
-      - name: Print server .env file
-        run: cat server/.env
+      - name: Print SERVER_ENV for debugging
+        run: echo "SERVER_ENV: $SERVER_ENV_FILE"
 
-      - name: Print shared .env file
-        run: cat shared/.env
+      - name: Print SHARED_ENV for debugging
+        run: echo "SHARED_ENV: $SHARED_ENV_FILE"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
