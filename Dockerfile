@@ -26,18 +26,10 @@ COPY server/ ./server/
 COPY shared/ ./shared/
 
 # Install dependencies for server and shared
-RUN cd server && npm install
-RUN cd shared && npm install
+# RUN cd server && npm install
+# RUN cd shared && npm install
 
 RUN cd shared && npx prisma generate
-
-# RUN set +e \
-#     && npx tsc -p . \
-#     && set -e
-
-# RUN set +e \
-#     && cp -r ./shared/prisma ./dist/shared/prisma \
-#     && set -e
 
 RUN npx tsc -p . && cp -r ./shared/prisma ./dist/shared/prisma
 

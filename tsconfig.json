@@ -10,5 +10,6 @@
     "forceConsistentCasingInFileNames": true
   },
   "include": ["server/src/**/*", "shared/src/**/*"],
-  "exclude": ["node_modules", "dist"]
+  "exclude": ["node_modules", "dist"],
+  "extensionsToTreatAsEsm": [".ts"]
 }

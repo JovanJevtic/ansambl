@@ -6,6 +6,7 @@ import errorHandler from "./middlewares/errorHandler";
 import env from "./utils/env";
 
 import v1 from "./routes/index";
+
 import deleteExpiredSignUpDemandTokensCronJob from "./utils/cronJobs";
 
 const app = express();
