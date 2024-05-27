@@ -11,8 +11,13 @@ const router = express.Router();
 router.get(
   "/live",
   expressAsyncHandler(async (req, res) => {
-    await redisClient.connect();
-    const redisResponse = await redisClient.get("user");
+    await redisClient.get("bla", (err, data) => {
+      if (err) {
+        console.log(`redis error: ${err}`)
+      } else {
+        console.log(`data: ${data}`)
+      }
+    })
     res.status(200).send("live");
   })
 );
