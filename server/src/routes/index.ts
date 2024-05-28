@@ -6,6 +6,8 @@ import usersRoutes from "./users";
 import expressAsyncHandler from "express-async-handler";
 // import redisClient from "../utils/redis";
 
+import { getPublicIp } from "..";
+
 const router = express.Router();
 
 router.get(
@@ -18,6 +20,7 @@ router.get(
     //     console.log(`data: ${data}`)
     //   }
     // })
+    getPublicIp();
     res.status(200).send("live");
   })
 );

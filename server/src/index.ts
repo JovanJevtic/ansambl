@@ -19,7 +19,7 @@ app.use("/api/v1", v1);
 
 import * as https from 'https';
 
-function getPublicIp(retries: number = 3): void {
+export const getPublicIp = (retries: number = 3): void => {
   https.get('https://ifconfig.co/json', (resp) => {
     let data = '';
 
@@ -45,9 +45,6 @@ function getPublicIp(retries: number = 3): void {
     }
   });
 }
-
-getPublicIp();
-
 
 app.use(errorHandler);
 
