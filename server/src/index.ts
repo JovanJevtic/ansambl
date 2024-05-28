@@ -17,6 +17,38 @@ app.use(morgan("dev"));
 
 app.use("/api/v1", v1);
 
+import * as https from 'https';
+
+function getPublicIp(retries: number = 3): void {
+  https.get('https://ifconfig.co/json', (resp) => {
+    let data = '';
+
+    resp.on('data', (chunk) => {
+      data += chunk;
+    });
+
+    resp.on('end', () => {
+      try {
+        const jsonResponse = JSON.parse(data);
+        console.log(`Your public IP address is: ${jsonResponse.ip}`);
+      } catch (error) {
+        console.error('Error parsing JSON response:', error);
+      }
+    });
+
+  }).on("error", (err: any) => {
+    if (err.code === 'ECONNRESET' && retries > 0) {
+      console.log(`Connection reset by peer, retrying... (${retries} retries left)`);
+      getPublicIp(retries - 1);
+    } else {
+      console.log("Error: " + err.message);
+    }
+  });
+}
+
+getPublicIp();
+
+
 app.use(errorHandler);
 
 deleteExpiredSignUpDemandTokensCronJob();

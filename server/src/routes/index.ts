@@ -4,20 +4,20 @@ import authRoutes from "./auth";
 import usersRoutes from "./users";
 
 import expressAsyncHandler from "express-async-handler";
-import redisClient from "../utils/redis";
+// import redisClient from "../utils/redis";
 
 const router = express.Router();
 
 router.get(
   "/live",
   expressAsyncHandler(async (req, res) => {
-    await redisClient.get("bla", (err, data) => {
-      if (err) {
-        console.log(`redis error: ${err}`)
-      } else {
-        console.log(`data: ${data}`)
-      }
-    })
+    // await redisClient.get("bla", (err, data) => {
+    //   if (err) {
+    //     console.log(`redis error: ${err}`)
+    //   } else {
+    //     console.log(`data: ${data}`)
+    //   }
+    // })
     res.status(200).send("live");
   })
 );
