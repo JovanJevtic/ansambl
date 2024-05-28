@@ -20,7 +20,11 @@ app.use("/api/v1", v1);
 import * as https from 'https';
 
 export const getPublicIp = (retries: number = 3): void => {
-  https.get('https://ifconfig.co/json', (resp) => {
+  const options = {
+    timeout: 5000 // 5 seconds timeout
+  };
+
+  const req = https.get('https://api.ipify.org?format=json', options, (resp) => {
     let data = '';
 
     resp.on('data', (chunk) => {
@@ -29,14 +33,20 @@ export const getPublicIp = (retries: number = 3): void => {
 
     resp.on('end', () => {
       try {
-        const jsonResponse = JSON.parse(data);
-        console.log(`Your public IP address is: ${jsonResponse.ip}`);
+        // Provera sadržaja odgovora~
+        if (resp.headers['content-type']?.includes('application/json')) {
+          const jsonResponse = JSON.parse(data);
+          console.log(`Your public IP address is: ${jsonResponse.ip}`);
+        } else {
+          console.error('Unexpected response format:', data);
+        }
       } catch (error) {
         console.error('Error parsing JSON response:', error);
       }
     });
+  });
 
-  }).on("error", (err: any) => {
+  req.on("error", (err: any) => {
     if (err.code === 'ECONNRESET' && retries > 0) {
       console.log(`Connection reset by peer, retrying... (${retries} retries left)`);
       getPublicIp(retries - 1);
@@ -44,8 +54,12 @@ export const getPublicIp = (retries: number = 3): void => {
       console.log("Error: " + err.message);
     }
   });
-}
 
+  req.on('timeout', () => {
+    req.abort();
+    console.log('Request timed out');
+  });
+}
 app.use(errorHandler);
 
 deleteExpiredSignUpDemandTokensCronJob();
