@@ -144,9 +144,6 @@ export const refreshAccessToken = expressAsyncHandler(
 );
 
 export const getMe = expressAsyncHandler((req: Request, res: Response) => {
-  console.log("dsadassads");
-  console.log(process.env);
-
   if (!req.user) {
     res.status(StatusCodes.UNAUTHORIZED);
     throw new Error(getReasonPhrase(StatusCodes.UNAUTHORIZED));
