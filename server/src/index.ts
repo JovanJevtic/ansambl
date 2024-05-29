@@ -64,13 +64,10 @@ export const getPublicIp = (retries: number = 3): void => {
 import Redis from 'ioredis';
 // Konfiguracija za povezivanje sa Redis serverom
 const redis = new Redis({
-  // host: "redis://red-cpbiupmn7f5s73fd8df0:6379", // Zamijenite sa stvarnom adresom Redis servera
   host: env.REDIS_IP,
   family: 6,
   password: env.REDIS_PWD
 });
-// telnet ansambl-redis-cache.io3f4d.ng.0001.eun1.cache.amazonaws.com 6379
-
 // Provera da li je uspešno povezan sa Redis serverom
 redis.on('connect', () => {
   console.log('Connected to Redis server');
