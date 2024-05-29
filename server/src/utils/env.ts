@@ -9,6 +9,7 @@ const envSchema = z.object({
   JWT_SECRET_REFRESH: z.string().trim().min(1),
   REDIS_URL: z.string().trim().min(1),
   REDIS_PWD: z.string().trim().min(1),
+  REDIS_IP: z.string().trim().min(1)
 });
 
 const env = envSchema.parse(process.env);

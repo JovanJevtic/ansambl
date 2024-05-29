@@ -60,6 +60,36 @@ export const getPublicIp = (retries: number = 3): void => {
     console.log('Request timed out');
   });
 }
+
+import Redis from 'ioredis';
+// Konfiguracija za povezivanje sa Redis serverom
+const redis = new Redis({
+  // host: "redis://red-cpbiupmn7f5s73fd8df0:6379", // Zamijenite sa stvarnom adresom Redis servera
+  host: env.REDIS_IP,
+  family: 6,
+  password: env.REDIS_PWD
+});
+// telnet ansambl-redis-cache.io3f4d.ng.0001.eun1.cache.amazonaws.com 6379
+
+// Provera da li je uspešno povezan sa Redis serverom
+redis.on('connect', () => {
+  console.log('Connected to Redis server');
+});
+
+// Slanje komande Redis serveru (npr. SET, GET)
+redis.set('key', 'value')
+  .then(() => console.log('Value set in Redis'))
+  .catch(err => console.error('Error setting value in Redis:', err));
+
+// Dohvatanje vrednosti iz Redis servera
+redis.get('key')
+  .then(result => console.log('Value retrieved from Redis:', result))
+  .catch(err => console.error('Error getting value from Redis:', err));
+
+// Zatvaranje veze sa Redis serverom kada više nije potrebno
+// redis.quit();
+
+
 app.use(errorHandler);
 
 deleteExpiredSignUpDemandTokensCronJob();
