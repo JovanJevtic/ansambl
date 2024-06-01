@@ -72,74 +72,64 @@ export const refreshAccessToken = expressAsyncHandler(
       throw new Error(getReasonPhrase(StatusCodes.BAD_REQUEST));
     }
 
-    try {
-      const decoded = jsonwebtoken.verify(
-        token,
-        env.JWT_SECRET_REFRESH
-      ) as JwtPayload;
+    const decoded = jsonwebtoken.verify(
+      token,
+      env.JWT_SECRET_REFRESH
+    ) as JwtPayload;
 
-      if (!decoded) {
-        await prisma.refreshToken.deleteMany({
-          where: {
-            token,
-          },
-        });
-
-        res.status(StatusCodes.UNAUTHORIZED);
-        throw new Error(getReasonPhrase(StatusCodes.UNAUTHORIZED));
-      }
-
-      const refreshToken = await prisma.refreshToken.findUnique({
+    if (!decoded) {
+      await prisma.refreshToken.deleteMany({
         where: {
           token,
         },
       });
 
-      if (!refreshToken) {
-        res.status(StatusCodes.UNAUTHORIZED);
-        throw new Error(getReasonPhrase(StatusCodes.UNAUTHORIZED));
-      }
-
-      //? Function that checks if the refresh token is about to expire, and if so - updates the expiredAt DateTime
-      if (
-        new Date(refreshToken.expiredAt) <
-        new Date(new Date().getTime() + 7 * 24 * 60 * 60 * 1000)
-      ) {
-        const D30 = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-        const updejted = await prisma.refreshToken.update({
-          where: {
-            id: refreshToken.id,
-          },
-          data: {
-            expiredAt: D30,
-          },
-        });
-      }
-
-      if (
-        decoded.id !== refreshToken.userId ||
-        refreshToken.expiredAt < new Date()
-      ) {
-        await prisma.refreshToken.delete({
-          where: {
-            token,
-          },
-        });
-        res.status(StatusCodes.UNAUTHORIZED);
-        throw new Error(getReasonPhrase(StatusCodes.UNAUTHORIZED));
-      }
-
-      const accessToken = generateAuthToken(refreshToken.userId);
-      res.status(200).json(accessToken);
-    } catch (error) {
-      // res.status(StatusCodes.INTERNAL_SERVER_ERROR);
-      if (!res.status) {
-        res.status(StatusCodes.INTERNAL_SERVER_ERROR);
-      }
-      throw (
-        error || new Error(getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR))
-      );
+      res.status(StatusCodes.UNAUTHORIZED);
+      throw new Error(getReasonPhrase(StatusCodes.UNAUTHORIZED));
     }
+
+    const refreshToken = await prisma.refreshToken.findUnique({
+      where: {
+        token,
+      },
+    });
+
+    if (!refreshToken) {
+      res.status(StatusCodes.UNAUTHORIZED);
+      throw new Error(getReasonPhrase(StatusCodes.UNAUTHORIZED));
+    }
+
+    //? Function that checks if the refresh token is about to expire, and if so - updates the expiredAt DateTime
+    if (
+      new Date(refreshToken.expiredAt) <
+      new Date(new Date().getTime() + 7 * 24 * 60 * 60 * 1000)
+    ) {
+      const D30 = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+      const updejted = await prisma.refreshToken.update({
+        where: {
+          id: refreshToken.id,
+        },
+        data: {
+          expiredAt: D30,
+        },
+      });
+    }
+
+    if (
+      decoded.id !== refreshToken.userId ||
+      refreshToken.expiredAt < new Date()
+    ) {
+      await prisma.refreshToken.delete({
+        where: {
+          token,
+        },
+      });
+      res.status(StatusCodes.UNAUTHORIZED);
+      throw new Error(getReasonPhrase(StatusCodes.UNAUTHORIZED));
+    }
+
+    const accessToken = generateAuthToken(refreshToken.userId);
+    res.status(200).json(accessToken);
   }
 );
 
@@ -157,8 +147,7 @@ export const signIn = expressAsyncHandler(
     req: TypedRequestBody<typeof authSchemas.signInBody>,
     res: Response
   ) => {
-    try {
-      const { username, password } = req.body;
+    const { username, password } = req.body;
 
       if (!username || !password) {
         res.status(StatusCodes.BAD_REQUEST);
@@ -191,14 +180,8 @@ export const signIn = expressAsyncHandler(
         }
 
         res.status(StatusCodes.BAD_REQUEST);
-        throw new Error(getReasonPhrase(StatusCodes.BAD_REQUEST));
+        throw new Error("Invalid credentials!");
       }
-    } catch (error) {
-      res.status(StatusCodes.INTERNAL_SERVER_ERROR);
-      throw (
-        error || new Error(getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR))
-      );
-    }
   }
 );
 
