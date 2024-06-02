@@ -13,7 +13,10 @@ const app = express();
 app.use(express.json());
 
 app.use(helmet());
-app.use(morgan("dev"));
+
+if (env.NODE_ENV === "dev") {
+  app.use(morgan("dev"));
+}
 
 app.use("/api/v1", v1);
 

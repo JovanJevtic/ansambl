@@ -149,39 +149,39 @@ export const signIn = expressAsyncHandler(
   ) => {
     const { username, password } = req.body;
 
-      if (!username || !password) {
+    if (!username || !password) {
+      res.status(StatusCodes.BAD_REQUEST);
+      throw new Error(getReasonPhrase(StatusCodes.BAD_REQUEST));
+    }
+
+    const user = await prisma.user.findFirst({
+      where: {
+        OR: [{ email: username }, { username: username }],
+      },
+    });
+
+    if (
+      user &&
+      user.password &&
+      (await bcrypt.compare(password, user.password))
+    ) {
+      const token = generateAuthToken(user.id);
+      const refreshToken = await generateRefreshToken(user.id);
+
+      const { password, ...userWithoutPassword } = user;
+      req.user = userWithoutPassword;
+      res.status(StatusCodes.OK).json({ token, refreshToken });
+    } else {
+      const isPhoneNumber = /^[0-9]+$/;
+
+      if (isPhoneNumber.test(username)) {
         res.status(StatusCodes.BAD_REQUEST);
-        throw new Error(getReasonPhrase(StatusCodes.BAD_REQUEST));
+        throw new Error("Format telefonskog broja je +387XxXxxXxx");
       }
 
-      const user = await prisma.user.findFirst({
-        where: {
-          OR: [{ email: username }, { username: username }],
-        },
-      });
-
-      if (
-        user &&
-        user.password &&
-        (await bcrypt.compare(password, user.password))
-      ) {
-        const token = generateAuthToken(user.id);
-        const refreshToken = await generateRefreshToken(user.id);
-
-        const { password, ...userWithoutPassword } = user;
-        req.user = userWithoutPassword;
-        res.status(StatusCodes.OK).json({ token, refreshToken });
-      } else {
-        const isPhoneNumber = /^[0-9]+$/;
-
-        if (isPhoneNumber.test(username)) {
-          res.status(StatusCodes.BAD_REQUEST);
-          throw new Error("Format telefonskog broja je +387XxXxxXxx");
-        }
-
-        res.status(StatusCodes.BAD_REQUEST);
-        throw new Error("Invalid credentials!");
-      }
+      res.status(StatusCodes.BAD_REQUEST);
+      throw new Error("Invalid credentials!");
+    }
   }
 );
 

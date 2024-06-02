@@ -86,7 +86,14 @@ router.post(
   authController.changePassword
 );
 
-router.post("/loggout", protect, authController.loggOut);
+router.post(
+  "/loggout",
+  protect,
+  validateRequest({
+    body: authSchemas.loggoutBody,
+  }),
+  authController.loggOut
+);
 
 //! Todo:
 //!    limiting - brute force protection,
