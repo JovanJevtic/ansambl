@@ -233,52 +233,39 @@ export const signUpDemand = expressAsyncHandler(
       },
     });
 
-    try {
-      const transporter = nodemailer.createTransport({
-        service: "gmail",
-        auth: {
-          user: env.NODEMAILER_AUTH_EMAIL,
-          pass: env.NODEMAILER_AUTH_PWD,
-        },
-      });
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: env.NODEMAILER_AUTH_EMAIL,
+        pass: env.NODEMAILER_AUTH_PWD,
+        }
+    });
 
-      // await new Promise((resolve, reject) => {
-      //   transporter.verify(function (error, success) {
-      //     if (error) {
-      //       reject(error);
-      //     } else {
-      //       resolve(success);
-      //     }
-      //   });
-      // });
+    transporter.verify((error, success) => {
+      if (error) {
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR);
+        throw new Error("An error ocurred while sending the email...Please try again!");
+      }
+    }) 
 
-      const html = `
-        <html>
-          <body>
-            <h4>Hello, ${capitalizeFirstLetter(username)}!</h4>
-            <p>Your verification code is: <b> ${token} </b>.</p>
-          </body>
-        </html>     
-      `;
+    const html = `
+      <html>
+        <body>
+          <h4>Hello, ${capitalizeFirstLetter(username)}!</h4>
+          <p>Your verification code is: <b> ${token} </b>.</p>
+        </body>
+      </html>     
+    `;
 
-      const mailOptions = {
-        from: env.NODEMAILER_AUTH_EMAIL,
-        to: email,
-        subject: "Confirm your account - Ansambl!",
-        html: html,
-      };
+    const mailOptions = {
+      from: env.NODEMAILER_AUTH_EMAIL,
+      to: email,
+      subject: "Confirm your account - Ansambl!",
+      html: html,
+    };
 
-      const sendResult = transporter.sendMail(mailOptions);
-      res.status(200).json({ signUpDemandToken: signUpDemandToken.id });
-    } catch (error) {
-      res.status(StatusCodes.INTERNAL_SERVER_ERROR);
-      // .send({
-      //   error: getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR),
-      // });
-      throw new Error(
-        "An error occured while sending the email...Please, try again!"
-      );
-    }
+    const sendResult = transporter.sendMail(mailOptions);
+    res.status(200).json({ signUpDemandToken: signUpDemandToken.id });
   }
 );
 
