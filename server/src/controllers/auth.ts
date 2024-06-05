@@ -233,52 +233,41 @@ export const signUpDemand = expressAsyncHandler(
       },
     });
 
-    try {
-      const transporter = nodemailer.createTransport({
-        service: "gmail",
-        auth: {
-          user: env.NODEMAILER_AUTH_EMAIL,
-          pass: env.NODEMAILER_AUTH_PWD,
-        },
-      });
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: env.NODEMAILER_AUTH_EMAIL,
+        pass: env.NODEMAILER_AUTH_PWD,
+      },
+    });
 
-      // await new Promise((resolve, reject) => {
-      //   transporter.verify(function (error, success) {
-      //     if (error) {
-      //       reject(error);
-      //     } else {
-      //       resolve(success);
-      //     }
-      //   });
-      // });
+    transporter.verify((err, success) => {
+      if (err) {
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR);
+        throw new Error(
+          "An error occured while sending the email...Please, try again!"
+        );
+      }
+    });
 
-      const html = `
-        <html>
-          <body>
-            <h4>Hello, ${capitalizeFirstLetter(username)}!</h4>
-            <p>Your verification code is: <b> ${token} </b>.</p>
-          </body>
-        </html>     
-      `;
+    const html = `
+      <html>
+        <body>
+          <h4>Hello, ${capitalizeFirstLetter(username)}!</h4>
+          <p>Your verification code is: <b> ${token} </b>.</p>
+        </body>
+      </html>     
+    `;
 
-      const mailOptions = {
-        from: env.NODEMAILER_AUTH_EMAIL,
-        to: email,
-        subject: "Confirm your account - Ansambl!",
-        html: html,
-      };
+    const mailOptions = {
+      from: env.NODEMAILER_AUTH_EMAIL,
+      to: email,
+      subject: "Confirm your account - Ansambl!",
+      html: html,
+    };
 
-      const sendResult = transporter.sendMail(mailOptions);
-      res.status(200).json({ signUpDemandToken: signUpDemandToken.id });
-    } catch (error) {
-      res.status(StatusCodes.INTERNAL_SERVER_ERROR);
-      // .send({
-      //   error: getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR),
-      // });
-      throw new Error(
-        "An error occured while sending the email...Please, try again!"
-      );
-    }
+    const sendResult = transporter.sendMail(mailOptions);
+    res.status(200).json({ signUpDemandToken: signUpDemandToken.id });
   }
 );
 
@@ -318,36 +307,29 @@ export const signUp = expressAsyncHandler(
       });
 
       if (!emailEquipped) {
-        try {
-          const user = await prisma.user.create({
-            data: {
-              email: signUpDemandToken.email,
-              type: signUpDemandToken.type,
-              username: signUpDemandToken.username,
-              password: signUpDemandToken.password,
-            },
-          });
+        const user = await prisma.user.create({
+          data: {
+            email: signUpDemandToken.email,
+            type: signUpDemandToken.type,
+            username: signUpDemandToken.username,
+            password: signUpDemandToken.password,
+          },
+        });
 
-          const accessToken = generateAuthToken(user.id);
-          const refreshToken = await generateRefreshToken(user.id);
+        const accessToken = generateAuthToken(user.id);
+        const refreshToken = await generateRefreshToken(user.id);
 
-          await prisma.signUpDemandToken.delete({
-            where: {
-              id: signUpDemandToken.id,
-            },
-          });
+        await prisma.signUpDemandToken.delete({
+          where: {
+            id: signUpDemandToken.id,
+          },
+        });
 
-          res.status(200).json({
-            user,
-            accessToken,
-            refreshToken,
-          });
-        } catch (error) {
-          res.json(STATUS_CODES.INTERNAL_SERVER_ERROR);
-          throw new Error(
-            getReasonPhrase(STATUS_CODES.UNAUTHORIZED || "Unauthorized!")
-          );
-        }
+        res.status(200).json({
+          user,
+          accessToken,
+          refreshToken,
+        });
       } else {
         const updatedUser = await prisma.user.update({
           where: {
@@ -386,19 +368,14 @@ export const loggOut = expressAsyncHandler(
   async (req: TypedRequestBody<typeof authSchemas.loggoutBody>, res) => {
     const { token } = req.body;
 
-    try {
-      const refreshToken = await prisma.refreshToken.delete({
-        where: {
-          token,
-        },
-      });
+    const refreshToken = await prisma.refreshToken.delete({
+      where: {
+        token,
+      },
+    });
 
-      req.user = undefined;
-      res.status(200).json("Logged out!");
-    } catch (error) {
-      res.status(StatusCodes.INTERNAL_SERVER_ERROR);
-      throw new Error(getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR));
-    }
+    req.user = undefined;
+    res.status(200).json("Logged out!");
   }
 );
 
@@ -414,43 +391,38 @@ export const googleSignUp = expressAsyncHandler(
       throw new Error(getReasonPhrase(StatusCodes.BAD_REQUEST));
     }
 
-    try {
-      const emailEquipped = await prisma.user.findUnique({
-        where: {
-          username,
-        },
-      });
+    const emailEquipped = await prisma.user.findUnique({
+      where: {
+        username,
+      },
+    });
 
-      if (emailEquipped) {
-        res.status(StatusCodes.BAD_REQUEST);
-        throw new Error("Username equipped!");
-      }
-
-      const user = await prisma.user.create({
-        data: {
-          email,
-          type,
-          username,
-          googleId,
-          name,
-          pfp: imageUrl,
-        },
-      });
-
-      const { password, ...userWithoutPassword } = user;
-
-      const accessToken = generateAuthToken(user.id);
-      const refreshToken = await generateRefreshToken(user.id);
-
-      res.status(200).json({
-        accessToken,
-        refreshToken,
-        userWithoutPassword,
-      });
-    } catch (error) {
-      res.status(StatusCodes.INTERNAL_SERVER_ERROR);
-      throw new Error(getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR));
+    if (emailEquipped) {
+      res.status(StatusCodes.BAD_REQUEST);
+      throw new Error("Username equipped!");
     }
+
+    const user = await prisma.user.create({
+      data: {
+        email,
+        type,
+        username,
+        googleId,
+        name,
+        pfp: imageUrl,
+      },
+    });
+
+    const { password, ...userWithoutPassword } = user;
+
+    const accessToken = generateAuthToken(user.id);
+    const refreshToken = await generateRefreshToken(user.id);
+
+    res.status(200).json({
+      accessToken,
+      refreshToken,
+      userWithoutPassword,
+    });
   }
 );
 
@@ -466,51 +438,46 @@ export const googleSignIn = expressAsyncHandler(
       throw new Error(getReasonPhrase(StatusCodes.BAD_REQUEST));
     }
 
-    try {
-      const userExists = await prisma.user.findUnique({
+    const userExists = await prisma.user.findUnique({
+      where: {
+        email,
+      },
+    });
+
+    if (!userExists) {
+      res.status(200).json({ exists: false });
+      // throw new Error(getReasonPhrase(StatusCodes.BAD_REQUEST))
+      return;
+    }
+
+    if (userExists && !userExists.googleId) {
+      const updated = await prisma.user.update({
         where: {
           email,
         },
+        data: {
+          googleId,
+        },
       });
 
-      if (!userExists) {
-        res.status(200).json({ exists: false });
-        // throw new Error(getReasonPhrase(StatusCodes.BAD_REQUEST))
-        return;
-      }
+      const { password, ...userWithoutPassword } = updated;
+      const refreshToken = await generateRefreshToken(updated.id);
+      const accessToken = generateAuthToken(updated.id);
 
-      if (userExists && !userExists.googleId) {
-        const updated = await prisma.user.update({
-          where: {
-            email,
-          },
-          data: {
-            googleId,
-          },
-        });
+      res
+        .status(200)
+        .json({ user: userWithoutPassword, refreshToken, accessToken });
+      return;
+    } else if (userExists && userExists.googleId) {
+      const { password, ...userWithoutPassword } = userExists;
+      const refreshToken = await generateRefreshToken(userExists.id);
+      const accessToken = generateAuthToken(userExists.id);
 
-        const { password, ...userWithoutPassword } = updated;
-        const refreshToken = await generateRefreshToken(updated.id);
-        const accessToken = generateAuthToken(updated.id);
-
-        res
-          .status(200)
-          .json({ user: userWithoutPassword, refreshToken, accessToken });
-        return;
-      } else if (userExists && userExists.googleId) {
-        const { password, ...userWithoutPassword } = userExists;
-        const refreshToken = await generateRefreshToken(userExists.id);
-        const accessToken = generateAuthToken(userExists.id);
-
-        res
-          .status(200)
-          .json({ user: userWithoutPassword, refreshToken, accessToken });
-        return;
-      } else {
-        res.status(StatusCodes.INTERNAL_SERVER_ERROR);
-        throw new Error(getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR));
-      }
-    } catch (error) {
+      res
+        .status(200)
+        .json({ user: userWithoutPassword, refreshToken, accessToken });
+      return;
+    } else {
       res.status(StatusCodes.INTERNAL_SERVER_ERROR);
       throw new Error(getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR));
     }
@@ -540,26 +507,33 @@ export const forgotPassword = expressAsyncHandler(
       throw new Error("User does not exists!");
     }
 
-    try {
-      const token = Math.floor(10000 + Math.random() * 90000);
+    const token = Math.floor(10000 + Math.random() * 90000);
 
-      const verifyEmailAddressToken =
-        await prisma.verifyEmailAddressToken.create({
-          data: {
-            token,
-            userId: user.id,
-          },
-        });
-
-      const transporter = nodemailer.createTransport({
-        service: "gmail",
-        auth: {
-          user: env.NODEMAILER_AUTH_EMAIL,
-          pass: env.NODEMAILER_AUTH_PWD,
+    const verifyEmailAddressToken = await prisma.verifyEmailAddressToken.create(
+      {
+        data: {
+          token,
+          userId: user.id,
         },
-      });
+      }
+    );
 
-      const html = `
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: env.NODEMAILER_AUTH_EMAIL,
+        pass: env.NODEMAILER_AUTH_PWD,
+      },
+    });
+
+    transporter.verify((err, success) => {
+      if (err) {
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR);
+        throw new Error("An error ocurred while sanding the email!");
+      }
+    });
+
+    const html = `
         <html>
           <body>
             <h4>Hello, ${capitalizeFirstLetter(user.username)}!</h4>
@@ -569,19 +543,15 @@ export const forgotPassword = expressAsyncHandler(
         </html>     
       `;
 
-      const mailOptions = {
-        from: env.NODEMAILER_AUTH_EMAIL,
-        to: email,
-        subject: "Password reset request - Ansambl!",
-        html: html,
-      };
+    const mailOptions = {
+      from: env.NODEMAILER_AUTH_EMAIL,
+      to: email,
+      subject: "Password reset request - Ansambl!",
+      html: html,
+    };
 
-      const sendResult = transporter.sendMail(mailOptions);
-      res.status(200).json(verifyEmailAddressToken.id);
-    } catch (error) {
-      res.status(StatusCodes.INTERNAL_SERVER_ERROR);
-      throw new Error(getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR));
-    }
+    const sendResult = transporter.sendMail(mailOptions);
+    res.status(200).json(verifyEmailAddressToken.id);
   }
 );
 
@@ -603,56 +573,47 @@ export const forgotPasswordConfirmation = expressAsyncHandler(
       throw new Error(getReasonPhrase(StatusCodes.BAD_REQUEST));
     }
 
-    try {
-      const emailAddressVerificationToken =
-        await prisma.verifyEmailAddressToken.findUnique({
-          where: {
-            id: emailAddressVerificationTokenId,
-          },
-        });
+    const emailAddressVerificationToken =
+      await prisma.verifyEmailAddressToken.findUnique({
+        where: {
+          id: emailAddressVerificationTokenId,
+        },
+      });
 
-      if (
-        emailAddressVerificationToken &&
-        emailAddressVerificationToken.token ===
-          emailAddressVerificationTokenValue
-      ) {
-        const user = await prisma.user.findUnique({
-          where: {
-            id: emailAddressVerificationToken.userId,
-          },
-        });
+    if (
+      emailAddressVerificationToken &&
+      emailAddressVerificationToken.token === emailAddressVerificationTokenValue
+    ) {
+      const user = await prisma.user.findUnique({
+        where: {
+          id: emailAddressVerificationToken.userId,
+        },
+      });
 
-        if (!user) {
-          res.status(StatusCodes.INTERNAL_SERVER_ERROR);
-          throw new Error(getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR));
-        }
-
-        await prisma.verifyEmailAddressToken.delete({
-          where: {
-            id: emailAddressVerificationTokenId,
-          },
-        });
-
-        const accessToken = generateAuthToken(user.id);
-        const refreshToken = await generateRefreshToken(user.id);
-
-        const { password, ...userWithoutPassword } = user;
-
-        res.status(200).json({
-          user: userWithoutPassword,
-          accessToken,
-          refreshToken,
-        });
-      } else {
-        res.status(StatusCodes.UNAUTHORIZED);
-        throw new Error("Incorrect code!");
+      if (!user) {
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR);
+        throw new Error(getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR));
       }
-    } catch (err) {
-      res.status(StatusCodes.INTERNAL_SERVER_ERROR);
-      // throw new Error(getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR));
-      throw (
-        err || new Error(getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR))
-      );
+
+      await prisma.verifyEmailAddressToken.delete({
+        where: {
+          id: emailAddressVerificationTokenId,
+        },
+      });
+
+      const accessToken = generateAuthToken(user.id);
+      const refreshToken = await generateRefreshToken(user.id);
+
+      const { password, ...userWithoutPassword } = user;
+
+      res.status(200).json({
+        user: userWithoutPassword,
+        accessToken,
+        refreshToken,
+      });
+    } else {
+      res.status(StatusCodes.UNAUTHORIZED);
+      throw new Error("Incorrect code!");
     }
   }
 );
@@ -670,28 +631,19 @@ export const changePassword = expressAsyncHandler(
       throw new Error(getReasonPhrase(StatusCodes.BAD_REQUEST));
     }
 
-    try {
-      const salt = await bcrypt.genSalt(10);
-      const hashPassword = await bcrypt.hash(newPassword, salt);
+    const salt = await bcrypt.genSalt(10);
+    const hashPassword = await bcrypt.hash(newPassword, salt);
 
-      await prisma.user.update({
-        where: {
-          id: req.user.id,
-        },
-        data: {
-          password: hashPassword,
-        },
-      });
+    await prisma.user.update({
+      where: {
+        id: req.user.id,
+      },
+      data: {
+        password: hashPassword,
+      },
+    });
 
-      res.status(200).json("ok");
-    } catch (error) {
-      if (!res.status) {
-        res.status(StatusCodes.INTERNAL_SERVER_ERROR);
-      }
-      throw (
-        error || new Error(getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR))
-      );
-    }
+    res.status(200).json("ok");
   }
 );
 
@@ -701,19 +653,10 @@ export const deleteMe = expressAsyncHandler(async (req, res) => {
     throw new Error(getReasonPhrase(StatusCodes.UNAUTHORIZED));
   }
 
-  try {
-    await prisma.user.delete({
-      where: {
-        id: req.user.id,
-      },
-    });
-    res.status(200).json("ok");
-  } catch (error) {
-    if (!res.status) {
-      res.status(StatusCodes.INTERNAL_SERVER_ERROR);
-    }
-    throw (
-      error || new Error(getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR))
-    );
-  }
+  await prisma.user.delete({
+    where: {
+      id: req.user.id,
+    },
+  });
+  res.status(200).json("ok");
 });

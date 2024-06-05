@@ -52,6 +52,14 @@ router.post(
 );
 
 router.post(
+  "/googleSignUp",
+  validateRequest({
+    body: authSchemas.signUpGoogleBody,
+  }),
+  authController.googleSignUp
+);
+
+router.post(
   "/googleSignIn",
   validateRequest({
     body: authSchemas.signInGoogleBody,
