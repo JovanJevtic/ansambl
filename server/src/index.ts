@@ -20,9 +20,9 @@ if (env.NODE_ENV === "dev") {
 
 app.use("/api/v1", v1);
 
-app.use(errorHandler);
-
 deleteExpiredSignUpDemandTokensCronJob();
+
+app.use(errorHandler);
 
 const PORT = 3000 || env.PORT;
 app.listen(PORT, "0.0.0.0", () => {

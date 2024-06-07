@@ -18,7 +18,6 @@ router.get(
       });
 
       if (!user) {
-        console.log("bla");
         throw new Error("User not found!");
       }
 

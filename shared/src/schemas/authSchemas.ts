@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { Category } from '../../prisma/'
+import { Category } from "../../prisma/";
 
 export const signUpDemandBody = z.object({
   username: z.string().min(3),
@@ -38,16 +38,18 @@ export const signUpGoogleBody = z.object({
   type: z.enum(["PERSONAL", "ORGANIZATION"]).nullish(),
 });
 
-const categoryValues = Object.values(Category)
+const categoryValues = Object.values(Category);
 
-export const updateProfileBody = z.object({
-  name: z.string().optional(),
-  profileDescription: z.string().optional(),
-  adress: z.string().array().optional(),
-  // interests: z.array(z.enum(categoryValues as [string, ...string[]])),
-  interests: z.array(z.nativeEnum(Category)).optional(),
-  pfp: z.string().optional()
-})
+export const updateProfileBody = z
+  .object({
+    name: z.string().optional(),
+    profileDescription: z.string().optional(),
+    adress: z.string().array().optional(),
+    // interests: z.array(z.enum(categoryValues as [string, ...string[]])),
+    interests: z.array(z.nativeEnum(Category)).optional(),
+    pfp: z.union([z.string(), z.null()]).optional(),
+  })
+  .strict();
 
 export const refreshAccessTokenBody = z
   .object({

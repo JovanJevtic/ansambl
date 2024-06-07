@@ -50,7 +50,7 @@ const protect = expressAsyncHandler(
             followers: true,
             following: true,
             pfp: true,
-            profileDescription: true
+            profileDescription: true,
           },
         });
 
@@ -69,7 +69,6 @@ const protect = expressAsyncHandler(
 
         next();
       } catch (error) {
-        console.log("err >>>>>>>>>>>>>>>>>", error)
         res.status(StatusCodes.UNAUTHORIZED);
         throw new Error(getReasonPhrase(StatusCodes.UNAUTHORIZED));
       }

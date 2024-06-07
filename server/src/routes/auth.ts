@@ -1,7 +1,7 @@
 import express from "express";
 
 import { z } from "zod";
-import { validateRequest } from "zod-express-middleware";
+import { validateRequest } from "zod-express-middleware-jovan";
 import * as authSchemas from "../../../shared/src/schemas/authSchemas";
 import * as authController from "../controllers/auth";
 import protect from "../middlewares/authHandler";
@@ -85,7 +85,6 @@ router.post(
   authController.forgotPasswordConfirmation
 );
 
-
 router.post(
   "/change-password",
   protect,
@@ -96,13 +95,13 @@ router.post(
 );
 
 router.post(
-  "/update", 
-  protect, 
+  "/update",
+  protect,
   validateRequest({
-    body: authSchemas.updateProfileBody
+    body: authSchemas.updateProfileBody,
   }),
   authController.updateProfile
-)
+);
 
 router.post(
   "/loggout",

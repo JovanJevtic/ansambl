@@ -5,13 +5,13 @@ import { STATUS_CODES } from "http";
 import { StatusCodes, getReasonPhrase } from "http-status-codes";
 import jsonwebtoken, { JwtPayload } from "jsonwebtoken";
 import nodemailer from "nodemailer";
-import { TypedRequestBody } from "zod-express-middleware";
+import { TypedRequestBody } from "zod-express-middleware-jovan";
 import prisma from "../../../shared/src/db";
 import * as authSchemas from "../../../shared/src/schemas/authSchemas";
 import capitalizeFirstLetter from "../utils/capitalize";
 import env from "../utils/env";
+import redisClient from "../utils/redis";
 import sendCronResponseEmail from "../utils/sendCronResponseEmail";
-import redisClient from '../utils/redis'
 
 export const generateAuthToken = (id: number) => {
   return jsonwebtoken.sign({ id }, env.JWT_SECRET, {
@@ -155,15 +155,11 @@ export const signIn = expressAsyncHandler(
       throw new Error(getReasonPhrase(StatusCodes.BAD_REQUEST));
     }
 
-    console.log("dasdasdasda")
-
     const user = await prisma.user.findFirst({
       where: {
         OR: [{ email: username }, { username: username }],
       },
     });
-
-    console.log(">>>>>>>>", user)
 
     if (
       user &&
@@ -651,43 +647,42 @@ export const changePassword = expressAsyncHandler(
   }
 );
 
-export const updateProfile = expressAsyncHandler(async (
-  req: TypedRequestBody<typeof authSchemas.updateProfileBody>, 
-  res: Response
-) => {
-  if (!req.user) {
-    console.log("Adaavaavaasvvadkasdhasodhjkv")
-    res.status(StatusCodes.UNAUTHORIZED);
-    throw new Error("Unauthorized");
-  }
-  
-  const updateData = req.body
-  const {
-    adress,
-    interests,
-    name,
-    pfp,
-    profileDescription
-  } = req.body
-
-  if (!updateData) {
-    console.log("blaaaaaddasdasdadasdadaddasdasasdas")
-    res.status(200);
-    res.json(req.user)
-  }
-
-  const updatedUser = await prisma.user.update({
-    where: {
-      id: req.user.id
-    },
-    data: {
-      ...updateData
+export const updateProfile = expressAsyncHandler(
+  async (
+    req: TypedRequestBody<typeof authSchemas.updateProfileBody>,
+    res: Response
+  ) => {
+    if (!req.user) {
+      res.status(StatusCodes.UNAUTHORIZED);
+      throw new Error("Unauthorized");
     }
-  })
 
-  await redisClient.set(`user_${req.user.id}`, JSON.stringify(updatedUser), "EX", 15 * 60);
-  res.status(StatusCodes.OK).json({ user: updatedUser });
-})
+    const updateData = req.body;
+    const { adress, interests, name, pfp, profileDescription } = req.body;
+
+    if (!adress && !interests && !name && !pfp && !profileDescription) {
+      res.status(200).json(req.user);
+      return;
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: {
+        id: req.user.id,
+      },
+      data: {
+        ...updateData,
+      },
+    });
+
+    await redisClient.set(
+      `user_${req.user.id}`,
+      JSON.stringify(updatedUser),
+      "EX",
+      15 * 60
+    );
+    res.status(StatusCodes.OK).json(updatedUser);
+  }
+);
 
 export const deleteMe = expressAsyncHandler(async (req, res) => {
   if (!req.user) {
