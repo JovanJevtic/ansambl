@@ -85,6 +85,7 @@ router.post(
   authController.forgotPasswordConfirmation
 );
 
+
 router.post(
   "/change-password",
   protect,
@@ -93,6 +94,15 @@ router.post(
   }),
   authController.changePassword
 );
+
+router.post(
+  "/update", 
+  protect, 
+  validateRequest({
+    body: authSchemas.updateProfileBody
+  }),
+  authController.updateProfile
+)
 
 router.post(
   "/loggout",

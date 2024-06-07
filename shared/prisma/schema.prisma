@@ -6,12 +6,12 @@
 
 generator client {
   provider = "prisma-client-js"
-  output = "./"
+  output   = "./"
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
 
@@ -36,51 +36,52 @@ enum Category {
 }
 
 model User {
-  id Int @id @default(autoincrement())
-  name String? @db.VarChar(50)
-  username String @db.VarChar(30) @unique
-  type UserType
-  birthday DateTime? @db.Date
-  gender Gender?
-  adress  String[]
-  interests Category[]
-  pfp String?
-  isPremium Boolean @default(false)
-  email String @unique @db.Text
-  phone String? @db.Text @unique
-  password String? @db.VarChar(100)
-  googleId String? @db.Text @unique
-  role Role @default(USER)
-  refreshToken RefreshToken[]
+  id                 Int            @id @default(autoincrement())
+  name               String?        @db.VarChar(50)
+  username           String         @unique @db.VarChar(30)
+  profileDescription String         @default("This person was too lazy to provide description...") @db.VarChar(70)
+  type               UserType
+  birthday           DateTime?      @db.Date
+  gender             Gender?
+  adress             String[]
+  interests          Category[]
+  pfp                String?
+  isPremium          Boolean        @default(false)
+  email              String         @unique @db.Text
+  phone              String?        @unique @db.Text
+  password           String?        @db.VarChar(100)
+  googleId           String?        @unique @db.Text
+  role               Role           @default(USER)
+  refreshToken       RefreshToken[]
 
   createdEvents Event[] @relation("Creator")
 
   verifyEmailAddressTokens VerifyEmailAddressToken[]
-  participatedTo EventParticipation[]
+  participatedTo           EventParticipation[]
 
   bookmarkedEvents Bookmark[]
 
-  followers       Follow[]        @relation("followingRelation")
-  following       Follow[]        @relation("followersRelation")
-  sentRequests    FollowRequest[] @relation("senderRelation")
+  followers        Follow[]        @relation("followingRelation")
+  following        Follow[]        @relation("followersRelation")
+  sentRequests     FollowRequest[] @relation("senderRelation")
   receivedRequests FollowRequest[] @relation("receiverRelation")
 }
 
 model Event {
-  id Int @id @default(autoincrement())
-  title String @db.VarChar(40)
-  description String @db.VarChar(50)
-  isPrivate Boolean
-  address String
-  city  String?
-  country String?
-  latitude  Float
-  longitude Float
-  dateTime DateTime
-  category Category
+  id          Int      @id @default(autoincrement())
+  title       String   @db.VarChar(40)
+  description String   @db.VarChar(50)
+  isPrivate   Boolean
+  address     String
+  city        String?
+  country     String?
+  latitude    Float
+  longitude   Float
+  dateTime    DateTime
+  category    Category
 
   creatorId Int
-  creator User @relation("Creator", fields: [creatorId], references: [id])
+  creator   User @relation("Creator", fields: [creatorId], references: [id])
 
   participants EventParticipation[]
 
@@ -88,23 +89,23 @@ model Event {
 }
 
 model Follow {
-  followerId Int
+  followerId  Int
   followingId Int
 
-  follower   User @relation("followersRelation", fields: [followerId], references: [id])
-  following  User @relation("followingRelation", fields: [followingId], references: [id])
+  follower  User @relation("followersRelation", fields: [followerId], references: [id])
+  following User @relation("followingRelation", fields: [followingId], references: [id])
 
   @@id([followerId, followingId])
 }
 
 model FollowRequest {
-  id        Int      @id @default(autoincrement())
-  senderId  Int
+  id         Int                 @id @default(autoincrement())
+  senderId   Int
   receiverId Int
-  status    FollowRequestStatus @default(PENDING)
+  status     FollowRequestStatus @default(PENDING)
 
-  sender    User @relation("senderRelation", fields: [senderId], references: [id])
-  receiver  User @relation("receiverRelation", fields: [receiverId], references: [id])
+  sender   User @relation("senderRelation", fields: [senderId], references: [id])
+  receiver User @relation("receiverRelation", fields: [receiverId], references: [id])
 }
 
 enum FollowRequestStatus {
@@ -114,12 +115,12 @@ enum FollowRequestStatus {
 }
 
 model Bookmark {
-  id      Int    @id @default(autoincrement())
+  id      Int @id @default(autoincrement())
   userId  Int
   eventId Int
 
-  user    User   @relation(fields: [userId], references: [id])
-  event   Event  @relation(fields: [eventId], references: [id])
+  user  User  @relation(fields: [userId], references: [id])
+  event Event @relation(fields: [eventId], references: [id])
 
   @@unique([userId, eventId])
 }
@@ -135,41 +136,40 @@ enum EventParticipationStatus {
 }
 
 model EventParticipation {
-  id Int @id @default(autoincrement())
-  eventId Int 
-  userId Int 
-  status EventParticipationStatus
-  createdAt DateTime @default(now())
+  id        Int                      @id @default(autoincrement())
+  eventId   Int
+  userId    Int
+  status    EventParticipationStatus
+  createdAt DateTime                 @default(now())
 
   event Event @relation(fields: [eventId], references: [id])
-  user User @relation(fields: [userId], references: [id])
+  user  User  @relation(fields: [userId], references: [id])
 
   @@unique([userId, eventId])
 }
 
-
 model SignUpDemandToken {
-  id Int @id @default(autoincrement())
-  email String @db.VarChar(240)
-  type UserType
-  username String @db.VarChar(30)
-  password  String @db.VarChar(100)
-  token Int 
+  id        Int      @id @default(autoincrement())
+  email     String   @db.VarChar(240)
+  type      UserType
+  username  String   @db.VarChar(30)
+  password  String   @db.VarChar(100)
+  token     Int
   expiredAt DateTime @default(dbgenerated("NOW() + INTERVAL '1 HOUR'"))
-} 
+}
 
 model RefreshToken {
-  id Int @id @default(autoincrement())
-  token String @unique
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
   expiredAt DateTime @default(dbgenerated("NOW() + INTERVAL '30 DAY'"))
-  userId Int
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model VerifyEmailAddressToken {
-  id Int @id @default(autoincrement())
-  token Int @unique
+  id        Int      @id @default(autoincrement())
+  token     Int      @unique
   expiredAt DateTime @default(dbgenerated("NOW() + INTERVAL '1 HOUR'"))
-  userId Int
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
