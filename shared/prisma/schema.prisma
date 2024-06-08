@@ -54,17 +54,17 @@ model User {
   role               Role           @default(USER)
   refreshToken       RefreshToken[]
 
-  createdEvents Event[] @relation("Creator")
+  createdEvents      Event[]        @relation("Creator")
 
-  verifyEmailAddressTokens VerifyEmailAddressToken[]
-  participatedTo           EventParticipation[]
+  verifyEmailAddressTokens          VerifyEmailAddressToken[]
+  participatedTo                    EventParticipation[]
 
-  bookmarkedEvents Bookmark[]
+  bookmarkedEvents                  Bookmark[]
 
-  followers        Follow[]        @relation("followingRelation")
-  following        Follow[]        @relation("followersRelation")
-  sentRequests     FollowRequest[] @relation("senderRelation")
-  receivedRequests FollowRequest[] @relation("receiverRelation")
+  followers         Follow[]        @relation("followingRelation")
+  following         Follow[]        @relation("followersRelation")
+  sentRequests      FollowRequest[] @relation("senderRelation")
+  receivedRequests  FollowRequest[] @relation("receiverRelation")
 }
 
 model Event {
