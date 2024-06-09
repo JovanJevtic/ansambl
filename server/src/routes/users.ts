@@ -12,7 +12,6 @@ const router = express.Router();
 //! @api/v1/users/${username}
 router.get(
   "/:username",
-  protect,
   validateRequest({
     params: usersSchema.getUserParamsSchema
   }),

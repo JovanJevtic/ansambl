@@ -37,39 +37,43 @@ export const getUser = expressAsyncHandler(
         throw new Error("User not found!");
       }
 
-      const isFollowing = await prisma.follow.findUnique({
-        where: {
-          followerId_followingId: {
-            followerId: req?.user?.id as number,
-            followingId: user.id
+      if (req?.user) {
+        const isFollowing = await prisma.follow.findUnique({
+          where: {
+            followerId_followingId: {
+              followerId: req?.user?.id as number,
+              followingId: user.id
+            }
           }
+        })
+        
+        if (isFollowing) {
+          res.json(user);
+        } else {
+          const newUser = {
+            name: user.name,
+            username: user.username,
+            profileDescription: user.profileDescription,
+            _count: {
+              followers: user._count.followers,
+              following: user._count.following
+            },
+            gender: user.gender
+          }
+          res.json(newUser)  
         }
-      })
-
-      if (isFollowing) {
-        res.json(user);
       } else {
-        const {
-          name,
-          username,
-          profileDescription,
-          _count: {
-            followers,
-            following
-          },
-          gender
-        } = user
         const newUser = {
-          name,
-          username,
-          profileDescription,
+          name: user.name,
+          username: user.username,
+          profileDescription: user.profileDescription,
           _count: {
-            followers,
-            following
+            followers: user._count.followers,
+            following: user._count.following
           },
-          gender
+          gender: user.gender
         }
-        res.json(newUser)  
+        res.json(newUser)
       }
   }
 )
