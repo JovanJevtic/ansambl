@@ -3,6 +3,7 @@ import { TypedRequestParams } from "zod-express-middleware-jovan";
 import * as usersSchema from "../../../shared/src/schemas/usersSchema";
 import prisma from "../../../shared/src/db";
 import { Response } from 'express'
+import { getReasonPhrase, StatusCodes } from "http-status-codes";
 
 export const getUser = expressAsyncHandler(
     async (
@@ -10,6 +11,11 @@ export const getUser = expressAsyncHandler(
         res: Response
     ) => {
       const username = req.params.username;
+      if (req.user && req.user.username === username) {
+        res.status(StatusCodes.BAD_REQUEST)
+        throw new Error(getReasonPhrase(StatusCodes.BAD_REQUEST))
+      } 
+
       const user = await prisma.user.findUnique({
         where: {
           username,
@@ -33,9 +39,20 @@ export const getUser = expressAsyncHandler(
       });
 
       if (!user) {
-        res.status(404)
+        res.status(StatusCodes.NOT_FOUND)
         throw new Error("User not found!");
       }
+
+      const {
+       id: aa,
+       ...userWithoutId
+      } = user
+
+      const {
+        id: bb,
+        adress,
+        ...privateUser        
+      } = user
 
       if (req?.user) {
         const isFollowing = await prisma.follow.findUnique({
@@ -48,32 +65,12 @@ export const getUser = expressAsyncHandler(
         })
         
         if (isFollowing) {
-          res.json(user);
+          res.json(userWithoutId).status(StatusCodes.OK);
         } else {
-          const newUser = {
-            name: user.name,
-            username: user.username,
-            profileDescription: user.profileDescription,
-            _count: {
-              followers: user._count.followers,
-              following: user._count.following
-            },
-            gender: user.gender
-          }
-          res.json(newUser)  
+          res.json(privateUser).status(StatusCodes.OK)
         }
       } else {
-        const newUser = {
-          name: user.name,
-          username: user.username,
-          profileDescription: user.profileDescription,
-          _count: {
-            followers: user._count.followers,
-            following: user._count.following
-          },
-          gender: user.gender
-        }
-        res.json(newUser)
+        res.json(privateUser).status(StatusCodes.OK)
       }
   }
 )
