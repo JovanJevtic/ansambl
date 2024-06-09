@@ -4,6 +4,7 @@ import prisma from "../../../shared/src/db";
 import { TypedRequest, TypedRequestParams, validateRequest } from "zod-express-middleware-jovan";
 import * as usersSchema from "../../../shared/src/schemas/usersSchema";
 import * as usersController from '../controllers/users'
+import protect from "../middlewares/authHandler";
 
 const router = express.Router();
 
@@ -11,6 +12,7 @@ const router = express.Router();
 //! @api/v1/users/${username}
 router.get(
   "/:username",
+  protect,
   validateRequest({
     params: usersSchema.getUserParamsSchema
   }),
