@@ -4,6 +4,8 @@ import * as usersSchema from "../../../shared/src/schemas/usersSchema";
 import prisma from "../../../shared/src/db";
 import { Response } from 'express'
 import { getReasonPhrase, StatusCodes } from "http-status-codes";
+import redisClient from '../utils/redis'
+import { UserWithoutPassword } from "../types/express";
 
 export const getUser = expressAsyncHandler(
     async (
@@ -14,6 +16,43 @@ export const getUser = expressAsyncHandler(
       if (req.user && req.user.username === username) {
         res.status(StatusCodes.BAD_REQUEST)
         throw new Error(getReasonPhrase(StatusCodes.BAD_REQUEST))
+      }
+     
+      const cachedUsernameId = await redisClient.get(`user_${username}`)     
+      if (cachedUsernameId) {
+        const cachedUser = await redisClient.get(`user_${cachedUsernameId}`)
+        if (cachedUser) {
+          const user = JSON.parse(cachedUser) as UserWithoutPassword;
+          const {
+            id: aa,
+            ...userWithoutId
+          } = user
+     
+          const {
+             id: bb,
+             adress,
+             ...privateUser        
+          } = user
+          
+          if (req?.user) {
+            const isFollowing = await prisma.follow.findUnique({
+              where: {
+                followerId_followingId: {
+                  followerId: req?.user?.id as number,
+                  followingId: user.id
+                }
+              }
+            })
+            
+            if (isFollowing) {
+              res.json(userWithoutId).status(StatusCodes.OK);
+            } else {
+              res.json(privateUser).status(StatusCodes.OK)
+            }
+          } else {
+            res.json(privateUser).status(StatusCodes.OK)
+          }
+        } 
       } 
 
       const user = await prisma.user.findUnique({
@@ -52,7 +91,7 @@ export const getUser = expressAsyncHandler(
         id: bb,
         adress,
         ...privateUser        
-      } = user
+      } = user 
 
       if (req?.user) {
         const isFollowing = await prisma.follow.findUnique({
