@@ -170,6 +170,12 @@ export const signIn = expressAsyncHandler(
       const refreshToken = await generateRefreshToken(user.id);
 
       const { password, ...userWithoutPassword } = user;
+      redisClient.set(
+        `user_${userWithoutPassword.id}`,
+        JSON.stringify(userWithoutPassword),
+        "EX",
+        15 * 60
+      );
       req.user = userWithoutPassword;
       res.status(StatusCodes.OK).json({ token, refreshToken });
     } else {
@@ -326,8 +332,16 @@ export const signUp = expressAsyncHandler(
           },
         });
 
+        const { password, ...userWithoutPassword } = user;
+        await redisClient.set(
+          `user_${userWithoutPassword.id}`,
+          JSON.stringify(userWithoutPassword),
+          "EX",
+          15 * 60
+        );
+
         res.status(200).json({
-          user,
+          userWithoutPassword,
           accessToken,
           refreshToken,
         });
