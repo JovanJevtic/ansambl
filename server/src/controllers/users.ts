@@ -23,6 +23,7 @@ export const getUser = expressAsyncHandler(
         const cachedUser = await redisClient.get(`user_${cachedUsernameId}`)
         if (cachedUser) {
           const user = JSON.parse(cachedUser) as UserWithoutPassword;
+          
           const {
             id: aa,
             ...userWithoutId
@@ -34,23 +35,26 @@ export const getUser = expressAsyncHandler(
              ...privateUser        
           } = user
           
-          if (req?.user) {
+          if (req?.user?.id) {
             const isFollowing = await prisma.follow.findUnique({
               where: {
                 followerId_followingId: {
-                  followerId: req?.user?.id as number,
+                  followerId: req?.user?.id,
                   followingId: user.id
                 }
               }
-            })
+            })            
             
             if (isFollowing) {
-              res.json(userWithoutId).status(StatusCodes.OK);
+              res.status(StatusCodes.OK).json(userWithoutId);
+              return
             } else {
-              res.json(privateUser).status(StatusCodes.OK)
+              res.status(StatusCodes.OK).json(privateUser)
+              return
             }
           } else {
-            res.json(privateUser).status(StatusCodes.OK)
+            res.status(StatusCodes.OK).json(privateUser)
+            return
           }
         } 
       } 
@@ -104,12 +108,15 @@ export const getUser = expressAsyncHandler(
         })
         
         if (isFollowing) {
-          res.json(userWithoutId).status(StatusCodes.OK);
+          res.status(StatusCodes.OK).json(userWithoutId)
+          return
         } else {
-          res.json(privateUser).status(StatusCodes.OK)
+          res.status(StatusCodes.OK).json(privateUser)
+          return
         }
       } else {
-        res.json(privateUser).status(StatusCodes.OK)
+        res.status(StatusCodes.OK).json(privateUser)
+        return
       }
   }
 )

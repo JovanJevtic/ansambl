@@ -27,51 +27,56 @@ const protect = expressAsyncHandler(
         if (cachedUser) {
           const parsedUser = JSON.parse(cachedUser) as UserWithoutPassword;
           req.user = parsedUser;
-          next();
+        } else {
+          const user = await prisma.user.findUnique({
+            where: { id: decoded.id },
+            select: {
+              password: false,
+              phone: true,
+              adress: true,
+              birthday: true,
+              email: true,
+              gender: true,
+              googleId: true,
+              id: true,
+              interests: true,
+              isPremium: true,
+              name: true,
+              role: true,
+              type: true,
+              username: true,
+              followers: true,
+              following: true,
+              pfp: true,
+              profileDescription: true,
+            },
+          });
+          
+          if (!user) {
+            res.status(StatusCodes.UNAUTHORIZED);
+            throw new Error(getReasonPhrase(StatusCodes.UNAUTHORIZED));
+          }
+          req.user = user as UserWithoutPassword;
+          redis.set(
+            `user_${decoded.id}`,
+            JSON.stringify(user),
+            "EX",
+            15 * 60
+          );
+          redis.set(
+            `user_${user.username}`,
+            JSON.stringify(user.id),
+            "EX",
+            15 * 60
+          )
         }
-
-        const user = await prisma.user.findUnique({
-          where: { id: decoded.id },
-          select: {
-            password: false,
-            phone: true,
-            adress: true,
-            birthday: true,
-            email: true,
-            gender: true,
-            googleId: true,
-            id: true,
-            interests: true,
-            isPremium: true,
-            name: true,
-            role: true,
-            type: true,
-            username: true,
-            followers: true,
-            following: true,
-            pfp: true,
-            profileDescription: true,
-          },
-        });
-
-        if (!user) {
-          res.status(StatusCodes.UNAUTHORIZED);
-          throw new Error(getReasonPhrase(StatusCodes.UNAUTHORIZED));
-        }
-
-        req.user = user as UserWithoutPassword;
-        await redis.set(
-          `user_${decoded.id}`,
-          JSON.stringify(user),
-          "EX",
-          15 * 60
-        );
-
         next();
       } catch (error) {
+        req.user = undefined
         next();
       }
     } else {
+      req.user = undefined
       next();
     }
   }
