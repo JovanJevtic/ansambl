@@ -10,7 +10,7 @@ const router = express.Router();
 router.get(
   "/live",
   expressAsyncHandler(async (req, res) => {
-    res.status(200).send("live");
+    res.status(200).send("live test");
   })
 );
 
