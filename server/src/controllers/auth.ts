@@ -140,7 +140,10 @@ export const getMe = expressAsyncHandler((req: Request, res: Response) => {
     throw new Error(getReasonPhrase(StatusCodes.UNAUTHORIZED));
   }
 
-  res.status(200).json(req.user);
+  res.status(200).json({
+    user: req.user,
+    uredjaj: req.headers['user-agent']
+  });
 });
 
 export const signIn = expressAsyncHandler(
