@@ -1,5 +1,5 @@
 import bcrypt from "bcryptjs";
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import expressAsyncHandler from "express-async-handler";
 import { STATUS_CODES } from "http";
 import { StatusCodes, getReasonPhrase } from "http-status-codes";
@@ -459,7 +459,8 @@ export const googleSignUp = expressAsyncHandler(
 export const googleSignIn = expressAsyncHandler(
   async (
     req: TypedRequestBody<typeof authSchemas.signInGoogleBody>,
-    res: Response
+    res: Response,
+    next: NextFunction
   ) => {
     const { email, googleId, imageUrl, name } = req.body;
 
