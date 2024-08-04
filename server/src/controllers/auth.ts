@@ -477,6 +477,7 @@ export const googleSignIn = expressAsyncHandler(
 
     if (!userExists) {
       req.url = '/api/v1/auth/googleSignUp'
+      req.body = { ...req.body, username: req.body.email, type: "PERSONAL"}
       next()
       // res.status(200).json({ exists: false });
       // throw new Error(getReasonPhrase(StatusCodes.BAD_REQUEST))
