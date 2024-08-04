@@ -475,9 +475,11 @@ export const googleSignIn = expressAsyncHandler(
     });
 
     if (!userExists) {
-      res.status(200).json({ exists: false });
+      req.url = '/api/v1/auth/googleSignUp'
+      next()
+      // res.status(200).json({ exists: false });
       // throw new Error(getReasonPhrase(StatusCodes.BAD_REQUEST))
-      return;
+      // return;
     }
 
     if (userExists && !userExists.googleId) {
