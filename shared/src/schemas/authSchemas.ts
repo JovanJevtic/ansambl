@@ -27,6 +27,8 @@ export const signInGoogleBody = z.object({
   email: z.string().email("Not a valid email!").min(1),
   imageUrl: z.string(),
   name: z.string().trim().min(3),
+  username: z.string().trim(),
+  type: z.enum(["PERSONAL", "ORGANIZATION"]),
 });
 
 export const signUpGoogleBody = z.object({
