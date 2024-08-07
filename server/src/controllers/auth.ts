@@ -12,6 +12,7 @@ import capitalizeFirstLetter from "../utils/capitalize";
 import env from "../utils/env";
 import redisClient from "../utils/redis";
 import sendCronResponseEmail from "../utils/sendCronResponseEmail";
+import url from 'url'
 
 export const generateAuthToken = (id: number) => {
   return jsonwebtoken.sign({ id }, env.JWT_SECRET, {
@@ -416,6 +417,8 @@ export const googleSignUp = expressAsyncHandler(
   ) => {
     const { email, googleId, imageUrl, name, username, type } = req.body;
 
+    console.log('brrrrrr')
+
     if (!name || !username || !email || !googleId || !imageUrl || !type) {
       res.status(StatusCodes.BAD_REQUEST);
       throw new Error(getReasonPhrase(StatusCodes.BAD_REQUEST));
@@ -476,16 +479,27 @@ export const googleSignIn = expressAsyncHandler(
     });
 
     if (!userExists) {
-      req.url = '/api/v1/auth/googleSignUp'
-      req.body.username = req.body.email
-      req.body.type = "PERSONAL"
-      next()
-      // res.status(200).json({ exists: false });
-      // throw new Error(getReasonPhrase(StatusCodes.BAD_REQUEST))
-      // return;
-    }
+      // req.body.username = req.body.email
+      // req.body.type = "PERSONAL"
+      // next()
 
-    if (userExists && !userExists.googleId) {
+      // res.redirect(url.format({
+      //   pathname:'/api/v1/auth/googleSignUp',
+      //   query: {
+      //      ...req.query,
+      //      "username": "bla",
+      //      "type": "PERSONAL"
+      //    }
+      // }));
+      // req.body = {
+      //   ...req.body,
+      //   username: req.body.email,
+      //   type: "PERSONAL"
+      // }
+      return res.redirect(307, '/api/v1/auth/googleSignUp', );
+      // req.url = '/googleSignUp'
+      // return next()
+    } else if (userExists && !userExists.googleId) {
       const updated = await prisma.user.update({
         where: {
           email,
