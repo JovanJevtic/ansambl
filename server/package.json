@@ -35,6 +35,8 @@
     "typescript": "^5.4.3"
   },
   "dependencies": {
+    "@types/node-fetch": "^2.6.11",
+    "axios": "^1.7.3",
     "bcryptjs": "^2.4.3",
     "express": "^4.19.2",
     "express-async-handler": "^1.2.0",

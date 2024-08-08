@@ -12,7 +12,7 @@ import capitalizeFirstLetter from "../utils/capitalize";
 import env from "../utils/env";
 import redisClient from "../utils/redis";
 import sendCronResponseEmail from "../utils/sendCronResponseEmail";
-import url from 'url'
+import axios from "axios";
 
 export const generateAuthToken = (id: number) => {
   return jsonwebtoken.sign({ id }, env.JWT_SECRET, {
@@ -410,14 +410,46 @@ export const loggOut = expressAsyncHandler(
   }
 );
 
+type GoogleLoginRes = {
+  email: string;
+  name: string;
+  locale: string;
+  picture: string;
+  id: string;
+  verified_email: boolean;
+}
+
 export const googleSignUp = expressAsyncHandler(
   async (
     req: TypedRequestBody<typeof authSchemas.signUpGoogleBody>,
     res: Response
   ) => {
-    const { email, googleId, imageUrl, name, username, type } = req.body;
+    const { email, googleId, imageUrl, name, username, type, accessToken: googleAccessToken } = req.body;
 
-    console.log('brrrrrr')
+    // const googleAccountExistsResponse = await axios<Promise<GoogleLoginRes>>('https://www.googleapis.com/userinfo/v2/me', {
+    //   headers: {
+    //     "content-type": "application/json",
+    //     Accept: 'application/json',
+    //     Authorization: `Bearer ${googleAccessToken}`,
+    //   }
+    // })
+    // const googleAccountExists = await googleAccountExistsResponse.data;
+
+    // if (
+    //   !googleAccountExists || 
+    //   !googleAccountExists.email || 
+    //   !googleAccountExists.id ||
+    //   googleAccountExists.email !== email || 
+    //   googleAccountExists.id !== googleId
+    // ) {
+    //   res.status(StatusCodes.BAD_REQUEST);
+    //   throw new Error("Error with a Google response object! Please try again...");
+    // }
+
+    // if (!googleAccountExists.verified_email) {
+    //   res.status(StatusCodes.BAD_REQUEST);
+    //   throw new Error("Google account is not verified! Please verify before continuing....");
+    // }
 
     if (!name || !username || !email || !googleId || !imageUrl || !type) {
       res.status(StatusCodes.BAD_REQUEST);
@@ -454,7 +486,7 @@ export const googleSignUp = expressAsyncHandler(
     res.status(200).json({
       accessToken,
       refreshToken,
-      userWithoutPassword,
+      user: userWithoutPassword,
     });
   }
 );
@@ -463,13 +495,42 @@ export const googleSignIn = expressAsyncHandler(
   async (
     req: TypedRequestBody<typeof authSchemas.signInGoogleBody>,
     res: Response,
-    next: NextFunction
   ) => {
-    const { email, googleId, imageUrl, name } = req.body;
+    const { email, googleId, imageUrl, name, accessToken: googleAccessToken } = req.body;
 
     if (!name || !email || !googleId || !imageUrl) {
       res.status(StatusCodes.BAD_REQUEST);
       throw new Error(getReasonPhrase(StatusCodes.BAD_REQUEST));
+    }
+
+    try {
+      const googleAccountExistsResponse = await axios<Promise<GoogleLoginRes>>('https://www.googleapis.com/userinfo/v2/me', {
+        headers: {
+          "content-type": "application/json",
+          Accept: 'application/json',
+          Authorization: `Bearer ${googleAccessToken}`,
+        }
+      })
+      const googleAccountExists = await googleAccountExistsResponse.data;
+  
+      if (
+        !googleAccountExists || 
+        !googleAccountExists.email || 
+        !googleAccountExists.id ||
+        googleAccountExists.email !== email || 
+        googleAccountExists.id !== googleId
+      ) {
+        res.status(StatusCodes.BAD_REQUEST);
+        throw new Error("Error with a Google response object! Please try again...");
+      }
+  
+      if (!googleAccountExists.verified_email) {
+        res.status(StatusCodes.BAD_REQUEST);
+        throw new Error("Google account is not verified! Please verify before continuing....");
+      }
+    } catch (err) {
+      res.status(StatusCodes.BAD_REQUEST);
+      throw new Error("Error with a Google response object! Please try again...");
     }
 
     const userExists = await prisma.user.findUnique({
@@ -479,26 +540,7 @@ export const googleSignIn = expressAsyncHandler(
     });
 
     if (!userExists) {
-      // req.body.username = req.body.email
-      // req.body.type = "PERSONAL"
-      // next()
-
-      // res.redirect(url.format({
-      //   pathname:'/api/v1/auth/googleSignUp',
-      //   query: {
-      //      ...req.query,
-      //      "username": "bla",
-      //      "type": "PERSONAL"
-      //    }
-      // }));
-      // req.body = {
-      //   ...req.body,
-      //   username: req.body.email,
-      //   type: "PERSONAL"
-      // }
       return res.redirect(307, '/api/v1/auth/googleSignUp', );
-      // req.url = '/googleSignUp'
-      // return next()
     } else if (userExists && !userExists.googleId) {
       const updated = await prisma.user.update({
         where: {

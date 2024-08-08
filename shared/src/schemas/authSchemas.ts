@@ -29,6 +29,7 @@ export const signInGoogleBody = z.object({
   name: z.string().trim().min(3),
   username: z.string().trim().optional(),
   type: z.enum(["PERSONAL", "ORGANIZATION"]).optional(),
+  accessToken: z.string().trim().min(1)
 });
 
 export const signUpGoogleBody = z.object({
@@ -38,6 +39,7 @@ export const signUpGoogleBody = z.object({
   name: z.string().trim().min(3),
   username: z.string().trim().min(3),
   type: z.enum(["PERSONAL", "ORGANIZATION"]).nullish(),
+  accessToken: z.string().trim().min(1)
 });
 
 const categoryValues = Object.values(Category);
